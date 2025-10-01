@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Alterar Aluno</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1><a href="menu.html" style="color:white; text-decoration:none;">Instituto Recriar</a></h1>
+</header>
+<div id="menu-container"></div>
+<script src="menu.js"></script>
+
+<div class="container">
+  <h2>Alterar Aluno</h2>
+  <form id="form-aluno">
+    <label for="nomeAluno">Nome do Aluno</label>
+    <input type="text" id="nomeAluno" name="nomeAluno" required>
+
+    <label for="nascAluno">Data de Nascimento</label>
+    <input type="date" id="nascAluno" name="nascAluno" required>
+
+    <label for="docAluno">Documento de Identidade</label>
+    <input type="text" id="docAluno" name="docAluno" required>
+
+    <label for="nomeResp">Nome do Responsável</label>
+    <input type="text" id="nomeResp" name="nomeResp" required>
+
+    <label for="nascResp">Data de Nascimento do Responsável</label>
+    <input type="date" id="nascResp" name="nascResp">
+
+    <label for="docResp">Documento de Identificação do Responsável</label>
+    <input type="text" id="docResp" name="docResp">
+
+    <label for="rua">Rua</label>
+    <input type="text" id="rua" name="rua">
+
+    <label for="numero">Número</label>
+    <input type="text" id="numero" name="numero">
+
+    <label for="bairro">Bairro</label>
+    <input type="text" id="bairro" name="bairro">
+
+    <label for="cidade">Cidade</label>
+    <input type="text" id="cidade" name="cidade">
+
+    <label for="telefone">Telefone</label>
+    <input type="text" id="telefone" name="telefone" required>
+
+    <div style="text-align:center; margin-top:1rem;">
+      <button type="submit">Salvar Alterações</button>
+    </div>
+  </form>
+</div>
+
+<script>
+// Dados simulados
+const alunos = [
+  {id:"001", nomeAluno:"João Silva", nascAluno:"2010-01-01", docAluno:"123456",
+   nomeResp:"Maria Silva", nascResp:"1980-05-10", docResp:"654321",
+   rua:"Rua A", numero:"10", bairro:"Centro", cidade:"Serra", telefone:"(27)99999-1111"},
+];
+
+// Pega o ID da query string
+const urlParams = new URLSearchParams(window.location.search);
+const alunoId = urlParams.get("id");
+const aluno = alunos.find(a => a.id === alunoId);
+
+if(aluno){
+  document.getElementById("nomeAluno").value = aluno.nomeAluno;
+  document.getElementById("nascAluno").value = aluno.nascAluno;
+  document.getElementById("docAluno").value = aluno.docAluno;
+  document.getElementById("nomeResp").value = aluno.nomeResp;
+  document.getElementById("nascResp").value = aluno.nascResp;
+  document.getElementById("docResp").value = aluno.docResp;
+  document.getElementById("rua").value = aluno.rua;
+  document.getElementById("numero").value = aluno.numero;
+  document.getElementById("bairro").value = aluno.bairro;
+  document.getElementById("cidade").value = aluno.cidade;
+  document.getElementById("telefone").value = aluno.telefone;
+}
+
+</script>
+</body>
+</html>

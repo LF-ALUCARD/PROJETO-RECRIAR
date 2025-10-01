@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aulas do Dia - Sistema Alunos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1><a href="menu.html" style="color:white; text-decoration:none;">Instituto Recriar</a></h1>
+</header>
+<div id="menu-container"></div>
+<script src="menu.js"></script>
+
+<div class="container">
+  <h2>Aulas do Dia</h2>
+
+  <label for="dataAula">Data:</label>
+  <input type="date" id="dataAula">
+
+  <div class="crud-bar" style="margin-top:1rem;">
+    <input type="text" id="buscarAula" placeholder="Filtrar por turma ou professor..." onkeyup="filtrarTabela()">
+  </div>
+
+  <table class="table" id="tabela-aulas">
+    <thead>
+      <tr>
+        <th>Turma</th>
+        <th>Professor</th>
+        <th>Curso</th>
+        <th>Dia</th>
+        <th>Horário</th>
+      </tr>
+    </thead>
+    <tbody id="tbody-aulas"></tbody>
+  </table>
+</div>
+
+<script>
+// constantes de exemplo
+const professores = [
+  {nome:"Carlos Souza", curso:"Aula de Reforço", cidade:"Vitória", telefone:"(27) 99999-1111"},
+  {nome:"Fernanda Lima", curso:"Dança", cidade:"Vitória", telefone:"(27) 99999-2222"},
+  {nome:"João Silva", curso:"Jiu-Jitsu", cidade:"Vitória", telefone:"(27) 99999-3333"},
+  {nome:"Mariana Alves", curso:"Balé", cidade:"Vitória", telefone:"(27) 99999-4444"}
+];
+
+const aulas = [
+  {turma:"Turma A", professor:"Carlos Souza", curso:"Aula de Reforço", dia:"2025-09-18", horario:"08:00 - 10:00"},
+  {turma:"Turma B", professor:"Fernanda Lima", curso:"Dança", dia:"2025-09-18", horario:"10:00 - 12:00"},
+  {turma:"Turma C", professor:"João Silva", curso:"Jiu-Jitsu", dia:"2025-09-19", horario:"08:00 - 10:00"},
+  {turma:"Turma D", professor:"Mariana Alves", curso:"Balé", dia:"2025-09-19", horario:"10:00 - 12:00"}
+];
+
+const tbody = document.getElementById("tbody-aulas");
+const inputData = document.getElementById("dataAula");
+
+// data de hoje
+const hoje = new Date().toISOString().slice(0,10);
+inputData.value = hoje;
+
+// carregar aulas por data
+function carregarAulasPorData(dataEscolhida) {
+  tbody.innerHTML = "";
+  const filtradas = aulas.filter(a => a.dia === dataEscolhida);
+
+  if(filtradas.length === 0){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="5" style="text-align:center;">Nenhuma aula para esta data</td>`;
+    tbody.appendChild(tr);
+  } else {
+    filtradas.forEach(a => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${a.turma}</td>
+        <td>${a.professor}</td>
+        <td>${a.curso}</td>
+        <td>${a.dia}</td>
+        <td>${a.horario}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+}
+
+// carrega aulas de hoje ao abrir a página
+carregarAulasPorData(hoje);
+
+// atualiza tabela ao mudar a data
+inputData.addEventListener("change", () => {
+  carregarAulasPorData(inputData.value);
+});
+
+// filtro por texto
+function filtrarTabela() {
+  const filtro = document.getElementById("buscarAula").value.toLowerCase();
+  tbody.querySelectorAll("tr").forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(filtro) ? "" : "none";
+  });
+}
+</script>
+</body>
+</html>

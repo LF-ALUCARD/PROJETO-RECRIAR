@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Professores - Sistema Alunos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1><a href="menu.html" style="color:white; text-decoration:none;">Instituto Recriar</a></h1>
+</header>
+<div id="menu-container"></div>
+<script src="menu.js"></script>
+
+<div class="container">
+  <h2>Professores Cadastrados</h2>
+
+  <!-- Barra de ações -->
+  <div class="crud-bar">
+    <input type="text" id="buscarProfessor" placeholder="Buscar professor..." onkeyup="filtrarTabela()">
+    <button onclick="incluirProfessor()">Incluir</button>
+    <button onclick="alterarProfessor()">Alterar</button>
+    <button onclick="excluirProfessor()">Excluir</button>
+  </div>
+
+  <!-- Tabela de professores -->
+  <table class="table" id="tabela-professores">
+    <thead>
+      <tr>
+        <th>Selecionar</th>
+        <th>Matrícula</th>
+        <th>Nome</th>
+        <th>Disciplina</th>
+        <th>Telefone</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Backend irá preencher aqui -->
+    </tbody>
+  </table>
+</div>
+
+<script>
+// Funções para CRUD
+function getProfessorSelecionado() {
+  const selecionado = document.querySelector('input[name="professorSelecionado"]:checked');
+  if (!selecionado) {
+    alert("Selecione um professor primeiro!");
+    return null;
+  }
+  return selecionado.value;
+}
+
+function incluirProfessor() {
+  window.location.href = "novo-professor.html";
+}
+
+function alterarProfessor() {
+  const profId = getProfessorSelecionado();
+  if (profId) {
+    window.location.href = `alterar-professor.html?id=${profId}`;
+  }
+}
+
+function excluirProfessor() {
+  const profId = getProfessorSelecionado();
+  if (profId) {
+    window.location.href = `excluir-professor.html?id=${profId}`;
+  }
+}
+
+// Função de busca
+function filtrarTabela() {
+  const input = document.getElementById("buscarProfessor");
+  const filter = input.value.toLowerCase();
+  const table = document.getElementById("tabela-professores");
+  const tr = table.getElementsByTagName("tr");
+
+  for (let i = 1; i < tr.length; i++) {
+    const tds = tr[i].getElementsByTagName("td");
+    const texto = tds[1].textContent + " " + tds[2].textContent + " " + tds[3].textContent;
+    tr[i].style.display = texto.toLowerCase().includes(filter) ? "" : "none";
+  }
+}
+</script>
+</body>
+</html>

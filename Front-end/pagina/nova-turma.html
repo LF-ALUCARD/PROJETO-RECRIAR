@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Turma - Sistema Alunos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1><a href="menu.html" style="color:white; text-decoration:none;">Instituto Recriar</a></h1>
+</header>
+<div id="menu-container"></div>
+<script src="menu.js"></script>
+
+<div class="container">
+  <h2>Cadastro de Turma</h2>
+
+  <form action="#" method="post">
+    <label for="nomeTurma">Nome da Turma</label>
+    <input type="text" id="nomeTurma" name="nomeTurma" placeholder="Digite o nome da turma" required>
+
+    <label for="codigoTurma">Código da Turma</label>
+    <input type="text" id="codigoTurma" name="codigoTurma" placeholder="Digite o código da turma" required>
+
+    <label for="curso">Curso</label>
+    <input type="text" id="curso" name="curso" placeholder="Digite o curso" required>
+
+    <label for="horaInicio">Horário (De / Até)</label>
+    <div style="display:flex; gap:1rem; align-items:center;">
+      <input type="time" id="horaInicio" name="horaInicio" required>
+      <span>até</span>
+      <input type="time" id="horaFim" name="horaFim" required>
+    </div>
+
+    <h3 style="margin-top:2rem;">Seleção de Professores</h3>
+    <table class="table" id="tabela-professores">
+      <thead>
+        <tr>
+          <th>Selecionar</th>
+          <th>Nome</th>
+          <th>Disciplina</th>
+        </tr>
+      </thead>
+      <tbody id="professores-tbody"></tbody>
+    </table>
+
+    <h3 style="margin-top:2rem;">Seleção de Alunos</h3>
+    <table class="table" id="tabela-alunos">
+      <thead>
+        <tr>
+          <th>Selecionar</th>
+          <th>Matrícula</th>
+          <th>Nome</th>
+          <th>Responsável</th>
+        </tr>
+      </thead>
+      <tbody id="alunos-tbody"></tbody>
+    </table>
+
+    <button type="submit" style="margin-top:1.5rem;">Salvar Turma</button>
+  </form>
+</div>
+</body>
+</html>

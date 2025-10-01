@@ -1,0 +1,146 @@
+  <!DOCTYPE html>
+  <html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alunos - Sistema Alunos</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+      /* Limite de altura para ativar rolagem */
+      .tabela-container {
+        max-height: 80%;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      thead {
+        background: #004080;
+        color: white;
+        position: sticky;
+        top: 0;
+      }
+      th, td {
+        border: 1px solid #ddd;
+        padding: 0.5rem;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+  <header>
+    <h1><a href="menu.html" style="color:white; text-decoration:none;">Instituto Recriar</a></h1>
+  </header>
+  <div id="menu-container"></div>
+  <script src="menu.js"></script>
+
+  <div class="container">
+    <h2>Alunos Cadastrados</h2>
+
+    <!-- Barra de opcoes -->
+    <div class="crud-bar">
+      <input type="text" id="buscarAluno" placeholder="Buscar aluno..." onkeyup="filtrarTabela()">
+      <button onclick="incluirAluno()">Incluir</button>
+      <button onclick="alterarAluno()">Alterar</button>
+      <button onclick="excluirAluno()">Excluir</button>
+    </div>
+
+    <!-- Tabela -->
+    <div class="tabela-container">
+      <table class="table" id="tabela-alunos">
+        <thead>
+          <tr>
+            <th>Selecionar</th>
+            <th>Matrícula</th>
+            <th>Nome</th>
+            <th>Data Nasc.</th>
+            <th>Responsável</th>
+            <th>Curso</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-alunos"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+  // apenas para exemplo
+  const alunos = [
+    {id:"001", nome:"João Silva", nasc:"2010-01-01", responsavel:"Maria Silva", curso:"Aula de Reforço"},
+    {id:"002", nome:"Maria Santos", nasc:"2010-02-15", responsavel:"José Santos", curso:"Dança"},
+    {id:"003", nome:"Pedro Oliveira", nasc:"2010-03-20", responsavel:"Ana Oliveira", curso:"Jiu-Jitsu"},
+    {id:"004", nome:"Lucas Pereira", nasc:"2010-04-10", responsavel:"Carla Pereira", curso:"Balé"},
+    {id:"005", nome:"Fernanda Lima", nasc:"2010-05-05", responsavel:"João Lima", curso:"Aula de Reforço"},
+    {id:"006", nome:"Ricardo Almeida", nasc:"2010-06-18", responsavel:"Paula Almeida", curso:"Dança"},
+    {id:"007", nome:"Juliana Costa", nasc:"2010-07-12", responsavel:"Marcos Costa", curso:"Jiu-Jitsu"},
+    {id:"008", nome:"Gabriel Souza", nasc:"2010-08-22", responsavel:"Roberta Souza", curso:"Balé"},
+    {id:"009", nome:"Camila Rocha", nasc:"2010-09-30", responsavel:"Fernando Rocha", curso:"Aula de Reforço"},
+    {id:"010", nome:"André Santos", nasc:"2010-10-25", responsavel:"Luciana Santos", curso:"Dança"},
+    {id:"011", nome:"Bianca Oliveira", nasc:"2010-11-05", responsavel:"Carlos Oliveira", curso:"Jiu-Jitsu"},
+    {id:"012", nome:"Felipe Lima", nasc:"2010-12-12", responsavel:"Patrícia Lima", curso:"Balé"},
+    {id:"013", nome:"Mariana Alves", nasc:"2010-01-15", responsavel:"Rodrigo Alves", curso:"Aula de Reforço"},
+    {id:"014", nome:"Thiago Ferreira", nasc:"2010-02-28", responsavel:"Sandra Ferreira", curso:"Dança"},
+    {id:"015", nome:"Letícia Mendes", nasc:"2010-03-10", responsavel:"Eduardo Mendes", curso:"Jiu-Jitsu"},
+    {id:"016", nome:"Bruno Cardoso", nasc:"2010-04-07", responsavel:"Aline Cardoso", curso:"Balé"},
+    {id:"017", nome:"Carolina Martins", nasc:"2010-05-16", responsavel:"Marcelo Martins", curso:"Aula de Reforço"},
+    {id:"018", nome:"Diego Barbosa", nasc:"2010-06-23", responsavel:"Renata Barbosa", curso:"Dança"},
+    {id:"019", nome:"Amanda Silva", nasc:"2010-07-14", responsavel:"Fábio Silva", curso:"Jiu-Jitsu"},
+    {id:"020", nome:"Rafael Souza", nasc:"2010-08-29", responsavel:"Tatiane Souza", curso:"Balé"}
+  ];
+
+  // Preenche com exemplo
+  const tbody = document.getElementById("tbody-alunos");
+  alunos.forEach(a => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input type="radio" name="alunoSelecionado" value="${a.id}"></td>
+      <td>${a.id}</td>
+      <td>${a.nome}</td>
+      <td>${a.nasc}</td>
+      <td>${a.responsavel}</td>
+      <td>${a.curso}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Funções 
+  function getAlunoSelecionado() {
+    const selecionado = document.querySelector('input[name="alunoSelecionado"]:checked');
+    if (!selecionado) {
+      alert("Selecione um aluno primeiro!");
+      return null;
+    }
+    return selecionado.value;
+  }
+
+  function incluirAluno() {
+    window.location.href = "novo-aluno.html";
+  }
+
+  function alterarAluno() {
+    const alunoId = getAlunoSelecionado();
+    if (alunoId) {
+      window.location.href = `alterar-aluno.html?id=${alunoId}`;
+    }
+  }
+
+  function excluirAluno() {
+    const alunoId = getAlunoSelecionado();
+    if (alunoId) {
+      window.location.href = `excluir-aluno.html?id=${alunoId}`;
+    }
+  }
+
+  // Função de busca
+  function filtrarTabela() {
+    const filter = document.getElementById("buscarAluno").value.toLowerCase();
+    tbody.querySelectorAll("tr").forEach(tr => {
+      tr.style.display = tr.textContent.toLowerCase().includes(filter) ? "" : "none";
+    });
+  }
+  </script>
+  </body>
+  </html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrar Turma</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Ajustes específicos para tabela de alunos */
+    .table input[type="number"] { width: 60px; }
+    .actions { display:flex; gap:1rem; justify-content:flex-end; margin-top:1rem; }
+  </style>
+</head>
+<body>
+  <!-- Menu será carregado via menu.js -->
+  <div id="menu-container"></div>
+
+  <main>
+    <div class="container">
+      <h2>Administrar Turma</h2>
+      <p id="titulo-turma"></p>
+
+      <table class="table" id="tabela-alunos">
+        <thead>
+          <tr>
+            <th>Aluno</th>
+            <th>Faltas</th>
+            <th>Nota</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-alunos"></tbody>
+      </table>
+
+      <div class="actions">
+        <button onclick="salvar()">Salvar Alterações</button>
+        <button onclick="voltar()">Voltar</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="menu.js"></script>
+  <script>
+    // Pega ID da turma da URL
+    const turmaId = new URL(window.location.href).searchParams.get("turma");
+
+    // Atualiza título da turma
+    const titulo = document.getElementById("titulo-turma");
+    if (turmaId) {
+      titulo.innerText = `Turma: ${turmaId}`;
+    } else {
+      titulo.innerText = "Turma não encontrada";
+    }
+
+    // Simulação de alunos por turma
+    const alunosSimulados = {
+      "T001": [
+        {id:"A001", nome:"Ana Paula", faltas:2, nota:8},
+        {id:"A002", nome:"Lucas Lima", faltas:1, nota:7}
+      ],
+      "T002": [
+        {id:"A003", nome:"Carla Mendes", faltas:0, nota:9},
+        {id:"A004", nome:"Bruno Silva", faltas:3, nota:6}
+      ],
+      "T003": [
+        {id:"A005", nome:"João Pedro", faltas:2, nota:7},
+        {id:"A006", nome:"Fernanda Souza", faltas:1, nota:8}
+      ]
+    };
+
+    const tbody = document.getElementById("tbody-alunos");
+    const alunos = alunosSimulados[turmaId] || [];
+
+    // Preenche tabela de alunos
+    alunos.forEach(a => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${a.nome}</td>
+        <td><input type="number" min="0" value="${a.faltas}" id="faltas-${a.id}"></td>
+        <td><input type="number" min="0" max="10" value="${a.nota}" id="nota-${a.id}"></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Função para salvar alterações (simula backend)
+    function salvar() {
+      alunos.forEach(a => {
+        const faltas = document.getElementById(`faltas-${a.id}`).value;
+        const nota = document.getElementById(`nota-${a.id}`).value;
+        console.log(`Aluno: ${a.nome}, Faltas: ${faltas}, Nota: ${nota}`);
+        // Aqui você poderia enviar via fetch/AJAX para salvar no backend
+      });
+      alert("Alterações salvas (simulado no console)");
+    }
+
+    // Voltar para a lista de turmas
+    function voltar() {
+      window.location.href = "turmas.html"; // ou sua página de listagem de turmas
+    }
+  </script>
+</body>
+</html>

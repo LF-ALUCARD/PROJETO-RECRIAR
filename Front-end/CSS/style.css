@@ -1,0 +1,144 @@
+/* Reset e base */
+* { box-sizing: border-box; margin:0; padding:0; }
+html, body { height: 100%; font-family: Arial, sans-serif; }
+body { background:#f5f5f5; color:#333; display:flex; }
+
+/* ----- Barra superior ----- */
+.top-bar {
+  position: fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:6%;
+  background:#2c3e50;
+  color:white;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 1rem;
+  z-index:1000;
+}
+
+.top-bar .empresa-logo {
+  font-size:1.25rem;
+  font-weight:bold;
+}
+
+.top-bar .sair a {
+  color:white;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.top-bar .sair a:hover {
+  text-decoration:underline;
+}
+
+/* ----- Menu lateral ----- */
+.menu-lateral {
+  position: fixed;
+  top:6%; /* abaixo da barra superior */
+  left:0;
+  width:15%;
+  height: calc(100% - 6%);
+  background:#34495e;
+  padding:1rem 0;
+  overflow:auto;
+}
+
+.menu-lateral ul {
+  list-style:none;
+  display:flex;
+  flex-direction:column;
+  gap:0.6rem;
+  padding:0;
+  margin:0;
+  align-items:center;
+}
+
+.menu-lateral li { width:90%; }
+.menu-lateral a {
+  display:block;
+  width:100%;
+  padding:0.6rem;
+  text-align:center;
+  text-decoration:none;
+  color:white;
+  font-weight:bold;
+  border-radius:4px;
+  transition: background 0.2s;
+}
+
+.menu-lateral a:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* ----- Conteúdo principal ----- */
+
+/* Barra de CRUD */
+.crud-bar {
+  display: flex;          /* transforma em flex horizontal */
+  align-items: center;    /* alinha verticalmente */
+  gap: 0.5rem;            /* espaço entre os elementos */
+  margin-bottom: 1rem;
+}
+
+/* Faz o input crescer e ocupar espaço disponível */
+
+.crud-bar input[type="text"] {
+  flex: 1;                /* ocupa todo o espaço restante */
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  height: 38px;
+}
+
+/* Botões */
+.crud-bar button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: none;
+  background: #004080;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s;
+  height: 38px;
+}
+
+main {
+  margin-top:60px;
+  margin-left:15%;
+  padding:2rem;
+  width:100%;
+}
+
+.container {
+  width: calc(100% - 15%);
+  margin: 2rem auto; /* ainda centraliza verticalmente */
+  background:white;
+  padding:2rem;
+  border-radius:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* ----- Tabelas, formulários, botões (opcional) ----- */
+h2 { margin-bottom:1rem; text-align:center; }
+label { display:block; margin-top:1rem; }
+input { width:100%; padding:0.5rem; margin-top:0.2rem; border:1px solid #ccc; border-radius:4px; }
+button { margin-top:1.5rem; padding:0.7rem 1rem; border:none; background:#004080; color:white; font-size:1rem; border-radius:4px; cursor:pointer; }
+button:hover { background:#003060; }
+.table { width:100%; border-collapse:collapse;  }
+.table th, .table td { border:1px solid #ccc; padding:0.5rem; text-align:left; }
+.table th { background:#004080; color:white; }
+.table tbody tr:nth-child(even) { background:#f0f0f0; }
+.table tbody tr:hover { background:#d9e6f2; }
+
+/* ----- Responsivo ----- */
+@media (max-width:800px) {
+  .menu-lateral { width:200px; }
+  main { margin-left:200px; }
+}
+@media (max-width:600px) {
+  .menu-lateral { display:none; }
+  main { margin-left:0; }
+}

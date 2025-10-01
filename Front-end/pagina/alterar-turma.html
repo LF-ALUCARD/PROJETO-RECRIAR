@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alterar Turma - Sistema Alunos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1><a href="menu.html" style="color:white; text-decoration:none;">Instituto Recriar</a></h1>
+</header>
+<div id="menu-container"></div>
+<script src="menu.js"></script>
+
+<div class="container">
+  <h2>Alterar Turma</h2>
+  <form id="form-turma">
+    <label for="nomeTurma">Nome da Turma</label>
+    <input type="text" id="nomeTurma" required>
+
+    <label for="codigoTurma">Código da Turma</label>
+    <input type="text" id="codigoTurma" readonly>
+
+    <label for="curso">Curso</label>
+    <input type="text" id="curso" required>
+
+    <label for="horaInicio">Horário (De / Até)</label>
+    <div style="display:flex; gap:1rem; align-items:center;">
+      <input type="time" id="horaInicio" required>
+      <span>até</span>
+      <input type="time" id="horaFim" required>
+    </div>
+
+    <h3>Seleção de Professores</h3>
+    <table class="table" id="tabela-professores">
+      <thead>
+        <tr><th>Selecionar</th><th>Nome</th><th>Curso</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h3>Seleção de Alunos</h3>
+    <input type="text" id="buscarAluno" placeholder="Buscar aluno..." onkeyup="filtrarAlunos()" style="margin-bottom:0.5rem; width:100%; padding:0.4rem;">
+
+    <div style="max-height: calc(6 * 2.5rem); overflow-y:auto; border:1px solid #ccc; border-radius:4px;">
+      <table class="table" id="tabela-alunos">
+        <thead>
+          <tr><th>Selecionar</th><th>Matrícula</th><th>Nome</th><th>Responsável</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <button type="submit" style="margin-top:1.5rem;">Salvar</button>
+  </form>
+</div>
+
+<script>
+function filtrarAlunos() {
+  const filtro = document.getElementById("buscarAluno").value.toLowerCase();
+  const trs = document.querySelectorAll("#tabela-alunos tbody tr");
+  trs.forEach(tr => {
+    const nome = tr.cells[2].textContent.toLowerCase();
+    tr.style.display = nome.includes(filtro) ? "" : "none";
+  });
+}
+</script>
+</body>
+</html>
