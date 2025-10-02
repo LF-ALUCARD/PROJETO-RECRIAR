@@ -2,10 +2,10 @@ package recriar.web_service.entities.enums;
 
 public enum Parentesco {
 	
-	PAI(1),
-	MÃE(2),
-	AVÔ(3),
-	AVÓ(4);
+	PAI(0),
+	MÃE(1),
+	AVÔ(2),
+	AVÓ(3);
 	
 	private int code;
 	

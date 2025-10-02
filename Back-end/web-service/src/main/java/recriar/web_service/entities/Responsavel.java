@@ -1,9 +1,12 @@
 package recriar.web_service.entities;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import recriar.web_service.entities.enums.Parentesco;
 
@@ -33,6 +37,10 @@ public class Responsavel implements Serializable{
 	@JoinColumn(name = "endereco_id")
 	@JsonBackReference
 	private Endereco endereco;
+	
+	@OneToMany(mappedBy = "responsavel")
+	@JsonManagedReference
+	private Set<Aluno> filhos = new HashSet<>();
 	
 	public Responsavel () {}
 
