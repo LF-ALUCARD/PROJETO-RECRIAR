@@ -35,11 +35,11 @@ public class Responsavel implements Serializable{
 	
 	@ManyToOne
 	@JoinColumn(name = "endereco_id")
-	@JsonBackReference
+	@JsonManagedReference
 	private Endereco endereco;
 	
 	@OneToMany(mappedBy = "responsavel")
-	@JsonManagedReference
+	@JsonBackReference
 	private Set<Aluno> filhos = new HashSet<>();
 	
 	public Responsavel () {}

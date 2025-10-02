@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -32,7 +32,7 @@ public class Aluno implements Serializable {
 
 	@ManyToOne
 	@JoinColumn(name = "responsavel_id")
-	@JsonBackReference
+	@JsonManagedReference
 	private Responsavel responsavel;
 
 	public Aluno() {
