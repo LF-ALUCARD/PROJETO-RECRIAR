@@ -19,7 +19,6 @@ public class AlunoListDTO implements Serializable{
 	}
 
 	public AlunoListDTO(Aluno aluno) {
-		super();
 		this.id = aluno.getId();
 		this.name = aluno.getNome();
 		this.data_nascimento = aluno.getData_nascimento();
