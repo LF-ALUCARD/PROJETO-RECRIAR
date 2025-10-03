@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityNotFoundException;
 import recriar.web_service.entities.Aluno;
+import recriar.web_service.entities.DTO.AlunoDTO;
 import recriar.web_service.entities.DTO.AlunoListDTO;
 import recriar.web_service.repositories.AlunoRepository;
 import recriar.web_service.service.exceptions.DataBaseException;
@@ -48,9 +49,10 @@ public class AlunoService {
 		}
 	}
 	
-	public Aluno update(Long id, Aluno obj) {
+	public Aluno update(Long id, AlunoDTO obj) {
 		try {
-			Aluno entidade = repositor.getReferenceById(id);
+			Optional<Aluno> entidade1 = repositor.findById(id);
+			Aluno entidade = entidade1.get();
 			updateDate(entidade, obj);
 			return repositor.save(entidade);
 		}
@@ -59,11 +61,11 @@ public class AlunoService {
 		}
 	}
 	
-	private void updateDate(Aluno entidade, Aluno obj) {
+	private void updateDate(Aluno entidade, AlunoDTO obj) {
 		entidade.setNome(obj.getNome());
 		entidade.setData_nascimento(obj.getData_nascimento());
 		entidade.setSexo(obj.getSexo());
-		entidade.setAlergias(obj.getAlergias());
-		entidade.setObservacoes(obj.getObservacoes());
+		entidade.setAlergias(obj.getAlergia());
+		entidade.setObservacoes(obj.getObservacao());
 	}
 }
