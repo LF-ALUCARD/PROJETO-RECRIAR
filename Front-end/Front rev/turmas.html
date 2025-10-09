@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Turmas - Sistema de Gestão Escolar</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="common.js" defer></script>
+</head>
+<body>
+    <!-- Container que será preenchido pelo JS -->
+    <div id="menu-container"></div>
+
+    <main>
+        <div class="container">
+            <h2>Gestão de Turmas</h2>
+
+            <!-- Mensagem de feedback -->
+            <div id="feedback-message" class="feedback-message" style="display: none;"></div>
+
+            <!-- Barra de opções de CRUD -->
+            <div class="crud-bar">
+                <!-- Campo de busca -->
+                <input type="search" 
+                       id="buscar-turma" 
+                       placeholder="Buscar por nome, professor ou curso..." 
+                       aria-label="Buscar turmas">
+
+                <!-- Botões de ação -->
+                <button type="button" 
+                        id="btn-incluir" 
+                        class="btn-success" 
+                        onclick="incluirTurma()">
+                    Nova Turma
+                </button>
+                <button type="button" 
+                        id="btn-alterar" 
+                        onclick="alterarTurma()" 
+                        disabled>
+                    Editar
+                </button>
+                <button type="button" 
+                        id="btn-excluir" 
+                        class="btn-danger" 
+                        onclick="excluirTurma()" 
+                        disabled>
+                    Excluir
+                </button>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <span class="stat-number" id="total-turmas-count">0</span>
+                    <span class="stat-label">Total de Turmas</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="turmas-ativas-count">0</span>
+                    <span class="stat-label">Turmas Ativas</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="turmas-filtradas-count">0</span>
+                    <span class="stat-label">Resultados da Busca</span>
+                </div>
+            </div>
+
+            <!-- Tabela de turmas -->
+            <div class="table-container">
+                <table class="table" id="tabela-turmas">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" 
+                                       id="select-all" 
+                                       aria-label="Selecionar todas as turmas">
+                            </th>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Professor</th>
+                            <th>Curso</th>
+                            <th>Ano</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-turmas">
+                        <!-- BACKEND: Dados serão carregados via JavaScript a partir de uma API -->
+                    </tbody>
+                </table>
+                
+                <!-- Mensagem quando não há dados -->
+                <div id="no-data-message" class="no-data-message" style="display: none;">
+                    <p>Nenhuma turma encontrada.</p>
+                    <button type="button" onclick="incluirTurma()" class="btn-success">
+                        Cadastrar Primeira Turma
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paginação -->
+            <div class="pagination" id="pagination-container" style="display: none;">
+                <button type="button" id="btn-prev" onclick="previousPage()" disabled>
+                    Anterior
+                </button>
+                <span id="page-info">Página 1 de 1</span>
+                <button type="button" id="btn-next" onclick="nextPage()" disabled>
+                    Próxima
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="common.js"></script>
+    <script src="menu.js"></script>
+    <script>
+        // ================================
+        // DADOS MOCK DAS TURMAS (BACKEND: Substituir por chamada à API)
+        // ================================
+        let turmas = [
+            { 
+                id: "T001", 
+                nome: "Turma A - 1º Ano", 
+                professor: "Carlos Silva", 
+                curso: "Ensino Fundamental",
+                ano: "2025",
+                status: "Ativa",
+                dataCriacao: "2024-01-01"
+            },
+            { 
+                id: "T002", 
+                nome: "Turma B - 2º Ano", 
+                professor: "Ana Souza", 
+                curso: "Ensino Fundamental",
+                ano: "2025",
+                status: "Ativa",
+                dataCriacao: "2024-01-05"
+            },
+            { 
+                id: "T003", 
+                nome: "Turma C - 3º Ano", 
+                professor: "João Pereira", 
+                curso: "Ensino Médio",
+                ano: "2025",
+                status: "Ativa",
+                dataCriacao: "2024-01-10"
+            },
+            { 
+                id: "T004", 
+                nome: "Turma D - 1º Ano", 
+                professor: "Maria Oliveira", 
+                curso: "Ensino Médio",
+                ano: "2025",
+                status: "Inativa",
+                dataCriacao: "2024-01-15"
+            }
+        ];
+
+        // Variáveis de controle
+        let turmasFiltradas = [...turmas];
+        let currentPage = 1;
+        const itemsPerPage = CONFIG.ITEMS_PER_PAGE; // BACKEND: CONFIG.ITEMS_PER_PAGE pode ser um valor padrão ou vir do backend
+        let selectedTurmas = new Set();
+
+        // ================================
+        // INICIALIZAÇÃO
+        // ================================
+        document.addEventListener("DOMContentLoaded", function() {
+            // BACKEND: Verificar autenticação
+            if (!Auth.requireAuth()) return; // Auth.requireAuth() deve ser adaptado para o sistema de autenticação do backend
+
+            // Configurar eventos
+            setupEventListeners();
+            
+            // Carregar dados
+            // BACKEND: loadTurmas() deve chamar a API para buscar as turmas
+            loadTurmas();
+            
+            // Atualizar estatísticas
+            // BACKEND: updateStats() pode precisar de dados do backend
+            updateStats();
+        });
+
+        // ================================
+        // CONFIGURAR EVENT LISTENERS
+        // ================================
+        function setupEventListeners() {
+            // Busca em tempo real
+            const searchInput = document.getElementById("buscar-turma");
+            searchInput.addEventListener("input", debounce(filtrarTurmas, 300));
+
+            // Selecionar todos
+            const selectAllCheckbox = document.getElementById("select-all");
+            selectAllCheckbox.addEventListener("change", toggleSelectAll);
+
+            // Teclas de atalho
+            document.addEventListener("keydown", handleKeyboardShortcuts);
+        }
+
+        // ================================
+        // CARREGAR TURMAS NA TABELA
+        // ================================
+        async function loadTurmas() { // BACKEND: Tornar assíncrona para chamadas de API
+            const tbody = document.getElementById("tbody-turmas");
+            const noDataMessage = document.getElementById("no-data-message");
+            
+            // Limpar tabela
+            Table.clearBody("tabela-turmas");
+
+            // BACKEND: Chamar API para buscar turmas
+            // try {
+            //   const response = await fetch(`/api/turmas?page=${currentPage}&limit=${itemsPerPage}&search=${document.getElementById("buscar-turma").value}`);
+            //   if (!response.ok) throw new Error("Erro ao carregar turmas");
+            //   const data = await response.json(); // data.turmas, data.totalTurmas, etc.
+            //   turmas = data.turmas; // Atualizar a lista de turmas com os dados do backend
+            //   turmasFiltradas = data.turmas; // Se a API já retorna filtrado/paginado
+            // } catch (error) {
+            //   console.error("Erro ao buscar turmas:", error);
+            //   UI.showMessage("Não foi possível carregar as turmas.", "error");
+            //   return;
+            // }
+            
+            if (turmasFiltradas.length === 0) {
+                document.querySelector(".table-container table").style.display = "none";
+                noDataMessage.style.display = "block";
+                document.getElementById("pagination-container").style.display = "none";
+                return;
+            }
+
+            document.querySelector(".table-container table").style.display = "table";
+            noDataMessage.style.display = "none";
+
+            // Calcular paginação (se a API não fizer isso, ou para dados mock)
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const turmasPage = turmasFiltradas.slice(startIndex, endIndex);
+
+            // Criar linhas
+            turmasPage.forEach(turma => {
+                const row = createTurmaRow(turma);
+                Table.addRow("tabela-turmas", row);
+            });
+
+            // Atualizar paginação
+            updatePagination();
+            
+            // Atualizar botões
+            updateActionButtons();
+        }
+
+        // ================================
+        // CRIAR LINHA DA TABELA
+        // ================================
+        function createTurmaRow(turma) {
+            const row = document.createElement("tr");
+            row.dataset.turmaId = turma.id;
+            
+            const isSelected = selectedTurmas.has(turma.id);
+            const statusClass = turma.status === "Ativa" ? "status-active" : "status-inactive";
+            
+            row.innerHTML = `
+                <td>
+                    <input type="checkbox" 
+                           class="turma-checkbox" 
+                           value="${turma.id}" 
+                           ${isSelected ? "checked" : ""}
+                           onchange="toggleTurmaSelection(\'${turma.id}\')">
+                </td>
+                <td>${turma.id}</td>
+                <td>${turma.nome}</td>
+                <td>${turma.professor}</td>
+                <td>${turma.curso}</td>
+                <td>${turma.ano}</td>
+                <td><span class="status-badge ${statusClass}">${turma.status}</span></td>
+                <td class="actions">
+                    <button type="button" 
+                            class="btn-sm" 
+                            onclick="administrarTurma(\'${turma.id}\')" 
+                            title="Administrar turma">
+                        ⚙️
+                    </button>
+                    <button type="button" 
+                            class="btn-sm" 
+                            onclick="editarTurma(\'${turma.id}\')" 
+                            title="Editar turma">
+                        ✏️
+                    </button>
+                    <button type="button" 
+                            class="btn-sm btn-danger" 
+                            onclick="confirmarExclusao(\'${turma.id}\')" 
+                            title="Excluir turma">
+                        🗑️
+                    </button>
+                </td>
+            `;
+            
+            return row;
+        }
+
+        // ================================
+        // FILTRAR TURMAS
+        // ================================
+        async function filtrarTurmas() { // BACKEND: Tornar assíncrona para chamadas de API
+            const searchTerm = document.getElementById("buscar-turma").value.toLowerCase();
+            
+            // BACKEND: Se a filtragem for feita no backend, chamar a API com o searchTerm
+            // try {
+            //   const response = await fetch(`/api/turmas?search=${searchTerm}`);
+            //   if (!response.ok) throw new Error("Erro ao filtrar turmas");
+            //   turmasFiltradas = await response.json();
+            // } catch (error) {
+            //   console.error("Erro ao filtrar turmas:", error);
+            //   UI.showMessage("Não foi possível filtrar as turmas.", "error");
+            //   return;
+            // }
+
+            if (!searchTerm) {
+                turmasFiltradas = [...turmas]; // Usar a lista original se não houver termo de busca
+            } else {
+                turmasFiltradas = turmas.filter(turma => 
+                    turma.nome.toLowerCase().includes(searchTerm) ||
+                    turma.professor.toLowerCase().includes(searchTerm) ||
+                    turma.curso.toLowerCase().includes(searchTerm) ||
+                    turma.ano.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            currentPage = 1;
+            selectedTurmas.clear();
+            loadTurmas();
+            updateStats();
+        }
+
+        // ================================
+        // SELEÇÃO DE TURMAS
+        // ================================
+        function toggleTurmaSelection(turmaId) {
+            if (selectedTurmas.has(turmaId)) {
+                selectedTurmas.delete(turmaId);
+            } else {
+                selectedTurmas.add(turmaId);
+            }
+            
+            updateActionButtons();
+            updateSelectAllCheckbox();
+        }
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById("select-all");
+            const checkboxes = document.querySelectorAll(".turma-checkbox");
+            
+            if (selectAllCheckbox.checked) {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                    selectedTurmas.add(checkbox.value);
+                });
+            } else {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                    selectedTurmas.delete(checkbox.value);
+                });
+            }
+            
+            updateActionButtons();
+        }
+
+        function updateSelectAllCheckbox() {
+            const selectAllCheckbox = document.getElementById("select-all");
+            const checkboxes = document.querySelectorAll(".turma-checkbox");
+            const checkedBoxes = document.querySelectorAll(".turma-checkbox:checked");
+            
+            if (checkedBoxes.length === 0) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = false;
+            } else if (checkedBoxes.length === checkboxes.length) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = true;
+            } else {
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+
+        // ================================
+        // ATUALIZAR BOTÕES DE AÇÃO
+        // ================================
+        function updateActionButtons() {
+            const hasSelection = selectedTurmas.size > 0;
+            const singleSelection = selectedTurmas.size === 1;
+            
+            document.getElementById("btn-alterar").disabled = !singleSelection;
+            document.getElementById("btn-excluir").disabled = !hasSelection;
+        }
+
+        // ================================
+        // FUNÇÕES DE CRUD
+        // ================================
+        function incluirTurma() {
+            window.location.href = "nova-turma.html"; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        function alterarTurma() {
+            if (selectedTurmas.size !== 1) {
+                UI.showMessage("Selecione exatamente uma turma para editar.", "warning");
+                return;
+            }
+            
+            const turmaId = Array.from(selectedTurmas)[0];
+            window.location.href = `alterar-turma.html?id=${turmaId}`; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        function editarTurma(turmaId) {
+            window.location.href = `alterar-turma.html?id=${turmaId}`; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        async function excluirTurma() { // BACKEND: Tornar assíncrona para chamadas de API
+            if (selectedTurmas.size === 0) {
+                UI.showMessage("Selecione pelo menos uma turma para excluir.", "warning");
+                return;
+            }
+            
+            const count = selectedTurmas.size;
+            const message = count === 1 
+                ? "Tem certeza que deseja excluir esta turma?" 
+                : `Tem certeza que deseja excluir ${count} turmas?`;
+            
+            if (confirm(message)) {
+                // BACKEND: Chamar API para exclusão de turmas
+                // try {
+                //   const response = await fetch("/api/turmas/batch-delete", {
+                //     method: "DELETE",
+                //     headers: { "Content-Type": "application/json" },
+                //     body: JSON.stringify({ ids: Array.from(selectedTurmas) })
+                //   });
+                //   if (!response.ok) throw new Error("Erro ao excluir turmas");
+                //   // Lógica para remover do array local se necessário, ou recarregar
+                // } catch (error) {
+                //   console.error("Erro ao excluir turmas:", error);
+                //   UI.showMessage("Não foi possível excluir as turmas.", "error");
+                //   return;
+                // }
+
+                // Simular exclusão (integrar com backend)
+                selectedTurmas.forEach(turmaId => {
+                    const index = turmas.findIndex(t => t.id === turmaId);
+                    if (index > -1) {
+                        turmas.splice(index, 1);
+                    }
+                });
+                
+                selectedTurmas.clear();
+                filtrarTurmas(); // Recarregar dados após exclusão
+                UI.showMessage(`${count} turma(s) excluída(s) com sucesso.`, "success");
+            }
+        }
+
+        async function confirmarExclusao(turmaId) { // BACKEND: Tornar assíncrona para chamadas de API
+            const turma = turmas.find(t => t.id === turmaId);
+            if (!turma) return;
+            
+            if (confirm(`Tem certeza que deseja excluir a turma \"${turma.nome}\"?`)) {
+                // BACKEND: Chamar API para exclusão de um única turma
+                // try {
+                //   const response = await fetch(`/api/turmas/${turmaId}`, {
+                //     method: "DELETE"
+                //   });
+                //   if (!response.ok) throw new Error("Erro ao excluir turma");
+                // } catch (error) {
+                //   console.error("Erro ao excluir turma:", error);
+                //   UI.showMessage("Não foi possível excluir a turma.", "error");
+                //   return;
+                // }
+
+                const index = turmas.findIndex(t => t.id === turmaId);
+                if (index > -1) {
+                    turmas.splice(index, 1);
+                    filtrarTurmas(); // Recarregar dados após exclusão
+                    UI.showMessage("Turma excluída com sucesso.", "success");
+                }
+            }
+        }
+
+        function administrarTurma(turmaId) {
+            window.location.href = `administrar-turma.html?id=${turmaId}`; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        // ================================
+        // PAGINAÇÃO
+        // ================================
+        function updatePagination() {
+            const totalPages = Math.ceil(turmasFiltradas.length / itemsPerPage);
+            const paginationContainer = document.getElementById("pagination-container");
+            
+            if (totalPages <= 1) {
+                paginationContainer.style.display = "none";
+                return;
+            }
+            
+            paginationContainer.style.display = "flex";
+            
+            document.getElementById("btn-prev").disabled = currentPage === 1;
+            document.getElementById("btn-next").disabled = currentPage === totalPages;
+            document.getElementById("page-info").textContent = `Página ${currentPage} de ${totalPages}`;
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(turmasFiltradas.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadTurmas();
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadTurmas();
+            }
+        }
+
+        // ================================
+        // ATUALIZAR ESTATÍSTICAS
+        // ================================
+        function updateStats() {
+            document.getElementById("total-turmas-count").textContent = turmas.length; // BACKEND: Total de turmas do backend
+            document.getElementById("turmas-ativas-count").textContent = turmas.filter(t => t.status === "Ativa").length; // BACKEND: Contagem de ativas do backend
+            document.getElementById("turmas-filtradas-count").textContent = turmasFiltradas.length;
+        }
+
+        // ================================
+        // UTILS (do common.js, se não estiver globalmente disponível)
+        // ================================
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+    </script>
+</body>
+</html>
+

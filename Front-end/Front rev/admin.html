@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administração - Sistema de Gestão Escolar</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="common.js" defer></script>
+</head>
+<body>
+    <!-- Container que será preenchido pelo JS -->
+    <div id="menu-container"></div>
+
+    <main>
+        <div class="container">
+            <h2>Administração do Sistema</h2>
+
+            <!-- Mensagem de feedback -->
+            <div id="feedback-message" class="feedback-message" style="display: none;"></div>
+
+            <!-- Barra de opções de CRUD -->
+            <div class="crud-bar">
+                <!-- Campo de busca -->
+                <input type="search" 
+                       id="buscar-usuario" 
+                       placeholder="Buscar por nome, email ou perfil..." 
+                       aria-label="Buscar usuários">
+
+                <!-- Botões de ação -->
+                <button type="button" 
+                        id="btn-incluir" 
+                        class="btn-success" 
+                        onclick="incluirUsuario()">
+                    Novo Usuário
+                </button>
+                <button type="button" 
+                        id="btn-alterar" 
+                        onclick="alterarUsuario()" 
+                        disabled>
+                    Editar
+                </button>
+                <button type="button" 
+                        id="btn-excluir" 
+                        class="btn-danger" 
+                        onclick="excluirUsuario()" 
+                        disabled>
+                    Excluir
+                </button>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <span class="stat-number" id="total-usuarios-count">0</span>
+                    <span class="stat-label">Total de Usuários</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="usuarios-ativos-count">0</span>
+                    <span class="stat-label">Usuários Ativos</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="usuarios-filtrados-count">0</span>
+                    <span class="stat-label">Resultados da Busca</span>
+                </div>
+            </div>
+
+            <!-- Tabela de usuários -->
+            <div class="table-container">
+                <table class="table" id="tabela-usuarios">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" 
+                                       id="select-all" 
+                                       aria-label="Selecionar todos os usuários">
+                            </th>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Perfil</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-usuarios">
+                        <!-- BACKEND: Dados serão carregados via JavaScript a partir de uma API -->
+                    </tbody>
+                </table>
+                
+                <!-- Mensagem quando não há dados -->
+                <div id="no-data-message" class="no-data-message" style="display: none;">
+                    <p>Nenhum usuário encontrado.</p>
+                    <button type="button" onclick="incluirUsuario()" class="btn-success">
+                        Cadastrar Primeiro Usuário
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paginação -->
+            <div class="pagination" id="pagination-container" style="display: none;">
+                <button type="button" id="btn-prev" onclick="previousPage()" disabled>
+                    Anterior
+                </button>
+                <span id="page-info">Página 1 de 1</span>
+                <button type="button" id="btn-next" onclick="nextPage()" disabled>
+                    Próxima
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="common.js"></script>
+    <script src="menu.js"></script>
+    <script>
+        // ================================
+        // DADOS MOCK DOS USUÁRIOS (BACKEND: Substituir por chamada à API)
+        // ================================
+        let usuarios = [
+            { 
+                id: "U001", 
+                nome: "Admin Master", 
+                email: "admin@teste.com", 
+                perfil: "Administrador",
+                status: "Ativo",
+                dataCriacao: "2024-01-01"
+            },
+            { 
+                id: "U002", 
+                nome: "João Souza", 
+                email: "joao@teste.com", 
+                perfil: "Usuário",
+                status: "Ativo",
+                dataCriacao: "2024-02-15"
+            },
+            { 
+                id: "U003", 
+                nome: "Maria Silva", 
+                email: "maria@teste.com", 
+                perfil: "Usuário",
+                status: "Ativo",
+                dataCriacao: "2024-03-10"
+            },
+            { 
+                id: "U004", 
+                nome: "Carlos Oliveira", 
+                email: "carlos@teste.com", 
+                perfil: "Gestor",
+                status: "Inativo",
+                dataCriacao: "2024-04-05"
+            }
+        ];
+
+        // Variáveis de controle
+        let usuariosFiltrados = [...usuarios];
+        let currentPage = 1;
+        const itemsPerPage = CONFIG.ITEMS_PER_PAGE; // BACKEND: CONFIG.ITEMS_PER_PAGE pode ser um valor padrão ou vir do backend
+        let selectedUsuarios = new Set();
+
+        // ================================
+        // INICIALIZAÇÃO
+        // ================================
+        document.addEventListener("DOMContentLoaded", function() {
+            // BACKEND: Verificar autenticação
+            if (!Auth.requireAuth()) return; // Auth.requireAuth() deve ser adaptado para o sistema de autenticação do backend
+
+            // Configurar eventos
+            setupEventListeners();
+            
+            // Carregar dados
+            // BACKEND: loadUsuarios() deve chamar a API para buscar os usuários
+            loadUsuarios();
+            
+            // Atualizar estatísticas
+            // BACKEND: updateStats() pode precisar de dados do backend
+            updateStats();
+        });
+
+        // ================================
+        // CONFIGURAR EVENT LISTENERS
+        // ================================
+        function setupEventListeners() {
+            // Busca em tempo real
+            const searchInput = document.getElementById("buscar-usuario");
+            searchInput.addEventListener("input", debounce(filtrarUsuarios, 300));
+
+            // Selecionar todos
+            const selectAllCheckbox = document.getElementById("select-all");
+            selectAllCheckbox.addEventListener("change", toggleSelectAll);
+
+            // Teclas de atalho
+            document.addEventListener("keydown", handleKeyboardShortcuts);
+        }
+
+        // ================================
+        // CARREGAR USUÁRIOS NA TABELA
+        // ================================
+        async function loadUsuarios() { // BACKEND: Tornar assíncrona para chamadas de API
+            const tbody = document.getElementById("tbody-usuarios");
+            const noDataMessage = document.getElementById("no-data-message");
+            
+            // Limpar tabela
+            Table.clearBody("tabela-usuarios");
+
+            // BACKEND: Chamar API para buscar usuários
+            // try {
+            //   const response = await fetch(`/api/usuarios?page=${currentPage}&limit=${itemsPerPage}&search=${document.getElementById("buscar-usuario").value}`);
+            //   if (!response.ok) throw new Error("Erro ao carregar usuários");
+            //   const data = await response.json(); // data.usuarios, data.totalUsuarios, etc.
+            //   usuarios = data.usuarios; // Atualizar a lista de usuários com os dados do backend
+            //   usuariosFiltrados = data.usuarios; // Se a API já retorna filtrado/paginado
+            // } catch (error) {
+            //   console.error("Erro ao buscar usuários:", error);
+            //   UI.showMessage("Não foi possível carregar os usuários.", "error");
+            //   return;
+            // }
+            
+            if (usuariosFiltrados.length === 0) {
+                document.querySelector(".table-container table").style.display = "none";
+                noDataMessage.style.display = "block";
+                document.getElementById("pagination-container").style.display = "none";
+                return;
+            }
+
+            document.querySelector(".table-container table").style.display = "table";
+            noDataMessage.style.display = "none";
+
+            // Calcular paginação (se a API não fizer isso, ou para dados mock)
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const usuariosPage = usuariosFiltrados.slice(startIndex, endIndex);
+
+            // Criar linhas
+            usuariosPage.forEach(usuario => {
+                const row = createUsuarioRow(usuario);
+                Table.addRow("tabela-usuarios", row);
+            });
+
+            // Atualizar paginação
+            updatePagination();
+            
+            // Atualizar botões
+            updateActionButtons();
+        }
+
+        // ================================
+        // CRIAR LINHA DA TABELA
+        // ================================
+        function createUsuarioRow(usuario) {
+            const row = document.createElement("tr");
+            row.dataset.usuarioId = usuario.id;
+            
+            const isSelected = selectedUsuarios.has(usuario.id);
+            const statusClass = usuario.status === "Ativo" ? "status-active" : "status-inactive";
+            
+            row.innerHTML = `
+                <td>
+                    <input type="checkbox" 
+                           class="usuario-checkbox" 
+                           value="${usuario.id}" 
+                           ${isSelected ? "checked" : ""}
+                           onchange="toggleUsuarioSelection(\'${usuario.id}\')">
+                </td>
+                <td>${usuario.id}</td>
+                <td>${usuario.nome}</td>
+                <td>${usuario.email}</td>
+                <td>${usuario.perfil}</td>
+                <td><span class="status-badge ${statusClass}">${usuario.status}</span></td>
+                <td class="actions">
+                    <button type="button" 
+                            class="btn-sm" 
+                            onclick="editarUsuario(\'${usuario.id}\')" 
+                            title="Editar usuário">
+                        ✏️
+                    </button>
+                    <button type="button" 
+                            class="btn-sm btn-danger" 
+                            onclick="confirmarExclusao(\'${usuario.id}\')" 
+                            title="Excluir usuário">
+                        🗑️
+                    </button>
+                </td>
+            `;
+            
+            return row;
+        }
+
+        // ================================
+        // FILTRAR USUÁRIOS
+        // ================================
+        async function filtrarUsuarios() { // BACKEND: Tornar assíncrona para chamadas de API
+            const searchTerm = document.getElementById("buscar-usuario").value.toLowerCase();
+            
+            // BACKEND: Se a filtragem for feita no backend, chamar a API com o searchTerm
+            // try {
+            //   const response = await fetch(`/api/usuarios?search=${searchTerm}`);
+            //   if (!response.ok) throw new Error("Erro ao filtrar usuários");
+            //   usuariosFiltrados = await response.json();
+            // } catch (error) {
+            //   console.error("Erro ao filtrar usuários:", error);
+            //   UI.showMessage("Não foi possível filtrar os usuários.", "error");
+            //   return;
+            // }
+
+            if (!searchTerm) {
+                usuariosFiltrados = [...usuarios]; // Usar a lista original se não houver termo de busca
+            } else {
+                usuariosFiltrados = usuarios.filter(usuario => 
+                    usuario.nome.toLowerCase().includes(searchTerm) ||
+                    usuario.email.toLowerCase().includes(searchTerm) ||
+                    usuario.perfil.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            currentPage = 1;
+            selectedUsuarios.clear();
+            loadUsuarios();
+            updateStats();
+        }
+
+        // ================================
+        // SELEÇÃO DE USUÁRIOS
+        // ================================
+        function toggleUsuarioSelection(usuarioId) {
+            if (selectedUsuarios.has(usuarioId)) {
+                selectedUsuarios.delete(usuarioId);
+            } else {
+                selectedUsuarios.add(usuarioId);
+            }
+            
+            updateActionButtons();
+            updateSelectAllCheckbox();
+        }
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById("select-all");
+            const checkboxes = document.querySelectorAll(".usuario-checkbox");
+            
+            if (selectAllCheckbox.checked) {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                    selectedUsuarios.add(checkbox.value);
+                });
+            } else {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                    selectedUsuarios.delete(checkbox.value);
+                });
+            }
+            
+            updateActionButtons();
+        }
+
+        function updateSelectAllCheckbox() {
+            const selectAllCheckbox = document.getElementById("select-all");
+            const checkboxes = document.querySelectorAll(".usuario-checkbox");
+            const checkedBoxes = document.querySelectorAll(".usuario-checkbox:checked");
+            
+            if (checkedBoxes.length === 0) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = false;
+            } else if (checkedBoxes.length === checkboxes.length) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = true;
+            } else {
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+
+        // ================================
+        // ATUALIZAR BOTÕES DE AÇÃO
+        // ================================
+        function updateActionButtons() {
+            const hasSelection = selectedUsuarios.size > 0;
+            const singleSelection = selectedUsuarios.size === 1;
+            
+            document.getElementById("btn-alterar").disabled = !singleSelection;
+            document.getElementById("btn-excluir").disabled = !hasSelection;
+        }
+
+        // ================================
+        // FUNÇÕES DE CRUD
+        // ================================
+        function incluirUsuario() {
+            window.location.href = "novo-usuario.html"; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        function alterarUsuario() {
+            if (selectedUsuarios.size !== 1) {
+                UI.showMessage("Selecione exatamente um usuário para editar.", "warning");
+                return;
+            }
+            
+            const usuarioId = Array.from(selectedUsuarios)[0];
+            window.location.href = `alterar-usuario.html?id=${usuarioId}`; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        function editarUsuario(usuarioId) {
+            window.location.href = `alterar-usuario.html?id=${usuarioId}`; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        async function excluirUsuario() { // BACKEND: Tornar assíncrona para chamadas de API
+            if (selectedUsuarios.size === 0) {
+                UI.showMessage("Selecione pelo menos um usuário para excluir.", "warning");
+                return;
+            }
+            
+            const count = selectedUsuarios.size;
+            const message = count === 1 
+                ? "Tem certeza que deseja excluir este usuário?" 
+                : `Tem certeza que deseja excluir ${count} usuários?`;
+            
+            if (confirm(message)) {
+                // BACKEND: Chamar API para exclusão de usuários
+                // try {
+                //   const response = await fetch("/api/usuarios/batch-delete", {
+                //     method: "DELETE",
+                //     headers: { "Content-Type": "application/json" },
+                //     body: JSON.stringify({ ids: Array.from(selectedUsuarios) })
+                //   });
+                //   if (!response.ok) throw new Error("Erro ao excluir usuários");
+                //   // Lógica para remover do array local se necessário, ou recarregar
+                // } catch (error) {
+                //   console.error("Erro ao excluir usuários:", error);
+                //   UI.showMessage("Não foi possível excluir os usuários.", "error");
+                //   return;
+                // }
+
+                // Simular exclusão (integrar com backend)
+                selectedUsuarios.forEach(usuarioId => {
+                    const index = usuarios.findIndex(u => u.id === usuarioId);
+                    if (index > -1) {
+                        usuarios.splice(index, 1);
+                    }
+                });
+                
+                selectedUsuarios.clear();
+                filtrarUsuarios(); // Recarregar dados após exclusão
+                UI.showMessage(`${count} usuário(s) excluído(s) com sucesso.`, "success");
+            }
+        }
+
+        async function confirmarExclusao(usuarioId) { // BACKEND: Tornar assíncrona para chamadas de API
+            const usuario = usuarios.find(u => u.id === usuarioId);
+            if (!usuario) return;
+            
+            if (confirm(`Tem certeza que deseja excluir o usuário \"${usuario.nome}\"?`)) {
+                // BACKEND: Chamar API para exclusão de um único usuário
+                // try {
+                //   const response = await fetch(`/api/usuarios/${usuarioId}`, {
+                //     method: "DELETE"
+                //   });
+                //   if (!response.ok) throw new Error("Erro ao excluir usuário");
+                // } catch (error) {
+                //   console.error("Erro ao excluir usuário:", error);
+                //   UI.showMessage("Não foi possível excluir o usuário.", "error");
+                //   return;
+                // }
+
+                const index = usuarios.findIndex(u => u.id === usuarioId);
+                if (index > -1) {
+                    usuarios.splice(index, 1);
+                    filtrarUsuarios(); // Recarregar dados após exclusão
+                    UI.showMessage("Usuário excluído com sucesso.", "success");
+                }
+            }
+        }
+
+        // ================================
+        // PAGINAÇÃO
+        // ================================
+        function updatePagination() {
+            const totalPages = Math.ceil(usuariosFiltrados.length / itemsPerPage);
+            const paginationContainer = document.getElementById("pagination-container");
+            
+            if (totalPages <= 1) {
+                paginationContainer.style.display = "none";
+                return;
+            }
+            
+            paginationContainer.style.display = "flex";
+            
+            document.getElementById("btn-prev").disabled = currentPage === 1;
+            document.getElementById("btn-next").disabled = currentPage === totalPages;
+            document.getElementById("page-info").textContent = `Página ${currentPage} de ${totalPages}`;
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(usuariosFiltrados.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadUsuarios();
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadUsuarios();
+            }
+        }
+
+        // ================================
+        // ATUALIZAR ESTATÍSTICAS
+        // ================================
+        function updateStats() {
+            document.getElementById("total-usuarios-count").textContent = usuarios.length; // BACKEND: Total de usuários do backend
+            document.getElementById("usuarios-ativos-count").textContent = usuarios.filter(u => u.status === "Ativo").length; // BACKEND: Contagem de ativos do backend
+            document.getElementById("usuarios-filtrados-count").textContent = usuariosFiltrados.length;
+        }
+
+        // ================================
+        // UTILS (do common.js, se não estiver globalmente disponível)
+        // ================================
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Turma - Sistema Alunos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Menu lateral via JS -->
+  <div id="menu-container"></div>
+
+  <main>
+    <div class="container">
+      <h2>Cadastro de Turma</h2>
+
+      <form id="form-nova-turma" action="#" method="post">
+        <label for="nomeTurma">Nome da Turma</label>
+        <input type="text" id="nomeTurma" name="nomeTurma" placeholder="Digite o nome da turma" required>
+
+        <label for="codigoTurma">Código da Turma</label>
+        <input type="text" id="codigoTurma" name="codigoTurma" placeholder="Digite o código da turma" required>
+
+        <label for="curso">Curso</label>
+        <input type="text" id="curso" name="curso" placeholder="Digite o curso" required>
+
+        <label for="horaInicio">Horário (De / Até)</label>
+        <div style="display:flex; gap:1rem; align-items:center;">
+          <input type="time" id="horaInicio" name="horaInicio" required>
+          <span>até</span>
+          <input type="time" id="horaFim" name="horaFim" required>
+        </div>
+
+        <h3 style="margin-top:2rem;">Seleção de Professores</h3>
+        <table class="table" id="tabela-professores">
+          <thead>
+            <tr>
+              <th>Selecionar</th>
+              <th>Nome</th>
+              <th>Disciplina</th>
+            </tr>
+          </thead>
+          <tbody id="professores-tbody">
+            <!-- BACKEND: Aqui devem ser carregados os professores disponíveis -->
+          </tbody>
+        </table>
+
+        <h3 style="margin-top:2rem;">Seleção de Alunos</h3>
+        <table class="table" id="tabela-alunos">
+          <thead>
+            <tr>
+              <th>Selecionar</th>
+              <th>Matrícula</th>
+              <th>Nome</th>
+              <th>Responsável</th>
+            </tr>
+          </thead>
+          <tbody id="alunos-tbody">
+            <!-- BACKEND: Aqui devem ser carregados os alunos disponíveis -->
+          </tbody>
+        </table>
+
+        <div class="form-actions">
+          <button type="submit">Salvar Turma</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script src="menu.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // BACKEND: Carregar o menu e barra superior
+      // O menu.js já faz isso, mas se precisar de dados do backend para o menu, inserir aqui.
+
+      // BACKEND: Chamar funções para carregar professores e alunos disponíveis
+      carregarProfessoresDisponiveis();
+      carregarAlunosDisponiveis();
+
+      document.getElementById("form-nova-turma").addEventListener("submit", function(e){
+        e.preventDefault();
+
+        const nomeTurma = document.getElementById("nomeTurma").value;
+        const codigoTurma = document.getElementById("codigoTurma").value;
+        const curso = document.getElementById("curso").value;
+        const horaInicio = document.getElementById("horaInicio").value;
+        const horaFim = document.getElementById("horaFim").value;
+
+        const professoresSelecionados = Array.from(document.querySelectorAll("#tabela-professores tbody input[type=\"checkbox\"]:checked"))
+                                          .map(checkbox => checkbox.dataset.id);
+        const alunosSelecionados = Array.from(document.querySelectorAll("#tabela-alunos tbody input[type=\"checkbox\"]:checked"))
+                                      .map(checkbox => checkbox.dataset.id);
+
+        const novaTurma = {
+          nome: nomeTurma,
+          codigo: codigoTurma,
+          curso: curso,
+          horaInicio: horaInicio,
+          horaFim: horaFim,
+          professores: professoresSelecionados,
+          alunos: alunosSelecionados
+        };
+
+        // BACKEND: Enviar novaTurma para a API de criação de turma
+        console.log("Dados da nova turma:", novaTurma);
+        alert("Turma cadastrada com sucesso! (Simulado)");
+        // BACKEND: Opcional: redirecionar para a página de listagem de turmas
+        // window.location.href = 'turmas.html';
+      });
+    });
+
+    async function carregarProfessoresDisponiveis() {
+      // BACKEND: Substituir esta simulação pela chamada à API para buscar todos os professores disponíveis
+      try {
+        // const response = await fetch('/api/professores');
+        // if (!response.ok) throw new Error('Erro ao carregar professores');
+        // const professores = await response.json();
+
+        const professoresMock = [
+          {id: "P001", nome: "Carlos Silva", disciplina: "Matemática"},
+          {id: "P002", nome: "Ana Souza", disciplina: "Português"},
+          {id: "P003", nome: "Pedro Costa", disciplina: "História"}
+        ];
+        preencherTabelaProfessores(professoresMock);
+      } catch (error) {
+        console.error('Erro ao carregar professores disponíveis:', error);
+        alert('Não foi possível carregar a lista de professores.');
+      }
+    }
+
+    function preencherTabelaProfessores(professores) {
+      const tbody = document.getElementById('professores-tbody');
+      tbody.innerHTML = ''; // Limpa a tabela antes de preencher
+
+      professores.forEach(professor => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+          <td><input type="checkbox" data-id="${professor.id}"></td>
+          <td>${professor.nome}</td>
+          <td>${professor.disciplina}</td>
+        `;
+      });
+    }
+
+    async function carregarAlunosDisponiveis() {
+      // BACKEND: Substituir esta simulação pela chamada à API para buscar todos os alunos disponíveis
+      try {
+        // const response = await fetch('/api/alunos');
+        // if (!response.ok) throw new Error('Erro ao carregar alunos');
+        // const alunos = await response.json();
+
+        const alunosMock = [
+          {id: "A001", matricula: "2023001", nome: "Aluno 1", responsavel: "Pai do Aluno 1"},
+          {id: "A002", matricula: "2023002", nome: "Aluno 2", responsavel: "Mãe do Aluno 2"},
+          {id: "A003", matricula: "2023003", nome: "Aluno 3", responsavel: "Pai do Aluno 3"}
+        ];
+        preencherTabelaAlunos(alunosMock);
+      } catch (error) {
+        console.error('Erro ao carregar alunos disponíveis:', error);
+        alert('Não foi possível carregar a lista de alunos.');
+      }
+    }
+
+    function preencherTabelaAlunos(alunos) {
+      const tbody = document.getElementById('alunos-tbody');
+      tbody.innerHTML = ''; // Limpa a tabela antes de preencher
+
+      alunos.forEach(aluno => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+          <td><input type="checkbox" data-id="${aluno.id}"></td>
+          <td>${aluno.matricula}</td>
+          <td>${aluno.nome}</td>
+          <td>${aluno.responsavel}</td>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>
+

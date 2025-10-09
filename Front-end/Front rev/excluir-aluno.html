@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Excluir Aluno</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <!-- Cabeçalho -->
+        <h1><a href="menu.html" style="color:white; text-decoration:none;">Instituto Recriar</a></h1>
+    </header>
+
+    <!-- Menu lateral -->
+    <div id="menu-container"></div>
+    
+
+    <div class="container">
+        <h2>Excluir Aluno</h2>
+        <p>Tem certeza que deseja excluir o aluno abaixo?</p>
+
+        <!-- Área onde serão exibidos os dados do aluno selecionado -->
+        <div id="dadosAluno" style="margin: 1rem 0; padding: 1rem; border: 1px solid #ccc; border-radius: 6px;"></div>
+
+        <!-- Botões de ação -->
+        <div style="text-align:center; margin-top:1rem;">
+            <button onclick="confirmarExclusao()">Confirmar</button>
+            <button onclick="cancelarExclusao()">Cancelar</button>
+        </div>
+    </div>
+
+    <script src="menu.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // BACKEND: Carregar o menu e barra superior
+      // O menu.js já faz isso, mas se precisar de dados do backend para o menu, inserir aqui.
+
+      // Pega o ID da query string (ex: excluir-aluno.html?id=A001)
+      const urlParams = new URLSearchParams(window.location.search);
+      const alunoId = urlParams.get("id");
+
+      if (alunoId) {
+        carregarDadosAlunoParaExclusao(alunoId);
+      } else {
+        console.error("ID do aluno não fornecido na URL.");
+        alert("ID do aluno não fornecido. Por favor, retorne à página de alunos.");
+        // BACKEND: Opcional: redirecionar para a página de listagem de alunos
+        // window.location.href = 'alunos.html';
+      }
+    });
+
+    async function carregarDadosAlunoParaExclusao(id) {
+      // BACKEND: Substituir esta simulação pela chamada à API para buscar os dados do aluno pelo ID
+      try {
+        // Exemplo de como seria a chamada real (assumindo uma API REST)
+        // const response = await fetch(`/api/alunos/${id}`);
+        // if (!response.ok) throw new Error('Erro ao carregar aluno');
+        // const aluno = await response.json();
+
+        // Simulação de dados
+        const alunosMock = [
+          {id:"A001", nomeAluno:"Carlos Souza", docAluno:"123456789", turma:"3º Ano", telefone:"(27)99999-0000"}
+        ];
+        const aluno = alunosMock.find(a => a.id === id);
+
+        // Mostra dados na tela
+        if(aluno){
+          document.getElementById("dadosAluno").innerHTML = `
+            <p><strong>ID:</strong> ${aluno.id}</p>
+            <p><strong>Nome:</strong> ${aluno.nomeAluno}</p>
+            <p><strong>Documento:</strong> ${aluno.docAluno}</p>
+            <p><strong>Turma:</strong> ${aluno.turma}</p>
+            <p><strong>Telefone:</strong> ${aluno.telefone}</p>
+          `;
+        }else{
+          document.getElementById("dadosAluno").innerHTML = "<p style='color:red;'>Aluno não encontrado!</p>";
+          alert("Aluno não encontrado!");
+          // BACKEND: Opcional: redirecionar para a página de listagem de alunos
+          // window.location.href = 'alunos.html';
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados do aluno para exclusão:", error);
+        alert("Não foi possível carregar os dados do aluno.");
+      }
+    }
+
+    // Funções dos botões
+    async function confirmarExclusao(){
+      const urlParams = new URLSearchParams(window.location.search);
+      const alunoId = urlParams.get("id");
+
+      if (!alunoId) {
+        alert("ID do aluno não encontrado para exclusão.");
+        return;
+      }
+
+      // BACKEND: Chamar API para exclusão do aluno
+      try {
+        // Exemplo de como seria a chamada real (assumindo uma API REST DELETE)
+        // const response = await fetch(`/api/alunos/${alunoId}`, {
+        //   method: 'DELETE'
+        // });
+
+        // if (!response.ok) throw new Error('Erro ao excluir aluno');
+
+        alert("Aluno excluído com sucesso! (Simulado)");
+        window.location.href = "alunos.html"; // volta para a lista
+      } catch (error) {
+        console.error("Erro ao excluir aluno:", error);
+        alert("Não foi possível excluir o aluno.");
+      }
+    }
+
+    function cancelarExclusao(){
+      window.location.href = "alunos.html"; // volta para a lista sem excluir
+    }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professor - Sistema Alunos</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* Estilização da área da tabela */
+        .tabela-container {
+            max-height: 80%; /* limite da altura */
+            overflow-y: auto; /* rolagem caso ultrapasse */
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        /* Tabela */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* Cabeçalho fixo */
+        thead {
+            background: #004080;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        /* Células */
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <!-- Cabeçalho com link para o menu -->
+        <h1><a href="menu.html" style="color:white; text-decoration:none;">Instituto Recriar</a></h1>
+    </header>
+
+    <!-- Carrega menu externo -->
+    <div id="menu-container"></div>
+    <script src="menu.js"></script>
+
+    <div class="container">
+        <h2>Professores Cadastrados</h2>
+
+        <!-- Barra de opções de CRUD -->
+        <div class="crud-bar">
+            <!-- Campo de busca -->
+            <input type="text" id="buscarProfessor" placeholder="Buscar professor..." onkeyup="filtrarTabela()">
+
+            <!-- Botões de ação -->
+            <button onclick="incluirProfessor()">Incluir</button>
+            <button onclick="alterarProfessor()">Alterar</button>
+            <button onclick="excluirProfessor()">Excluir</button>
+        </div>
+
+        <!-- Tabela de professores -->
+        <div class="tabela-container">
+            <table class="table" id="tabela-professores">
+                <thead>
+                    <tr>
+                        <th>Selecionar</th>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Disciplina</th>
+                        <th>Telefone</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-professores"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // ================================
+        // LISTA INICIAL DE PROFESSORES (mock)
+        // ================================
+        const professores = [
+            { id: "P001", nome: "Carlos Silva", disciplina: "Matemática", telefone: "(27)99999-1111" },
+            { id: "P002", nome: "Ana Souza", disciplina: "Português", telefone: "(27)98888-2222" },
+            { id: "P003", nome: "João Pereira", disciplina: "História", telefone: "(27)97777-3333" },
+            { id: "P004", nome: "Maria Oliveira", disciplina: "Ciências", telefone: "(27)96666-4444" }
+        ];
+
+        // Corpo da tabela
+        const tbody = document.getElementById("tbody-professores");
+
+        // ================================
+        // CARREGAR PROFESSORES NA TABELA
+        // ================================
+        professores.forEach(p => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                        <td><input type="radio" name="professorSelecionado" value="${p.id}"></td>
+                        <td>${p.id}</td>
+                        <td>${p.nome}</td>
+                        <td>${p.disciplina}</td>
+                        <td>${p.telefone}</td>
+                    `;
+            tbody.appendChild(tr);
+        });
+
+        // ================================
+        // PEGAR O PROFESSOR SELECIONADO
+        // ================================
+        function getProfessorSelecionado() {
+            const selecionado = document.querySelector("input[name=\"professorSelecionado\"]:checked");
+            if (!selecionado) {
+                alert("Selecione um professor primeiro!");
+                return null;
+            }
+            return selecionado.value;
+        }
+
+        // ================================
+        // FUNÇÕES DE CRUD
+        // ================================
+        function incluirProfessor() {
+            window.location.href = "novo-professor.html"; // precisa existir esse arquivo
+        }
+
+        function alterarProfessor() {
+            const professorId = getProfessorSelecionado();
+            if (professorId) {
+                window.location.href = `alterar-professor.html?id=${professorId}`;
+            }
+        }
+
+        function excluirProfessor() {
+            const professorId = getProfessorSelecionado();
+            if (professorId) {
+                window.location.href = `excluir-professor.html?id=${professorId}`;
+            }
+        }
+
+        // ================================
+        // FILTRAR NA TABELA (BUSCA)
+        // ================================
+        function filtrarTabela() {
+            const filter = document.getElementById("buscarProfessor").value.toLowerCase();
+            tbody.querySelectorAll("tr").forEach(tr => {
+                tr.style.display = tr.textContent.toLowerCase().includes(filter) ? "" : "none";
+            });
+        }
+    </script>
+</body>
+</html>
+

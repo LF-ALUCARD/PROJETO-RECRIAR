@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turmas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Menu dinâmico -->
+  <div id="menu-container"></div>
+
+  <main>
+    <div class="container">
+      <h2>Turmas</h2>
+
+      <div class="crud-bar">
+        <input type="text" id="buscarTurma" placeholder="Buscar turma..." onkeyup="filtrarTabela()">
+        <button onclick="incluirTurma()">Incluir</button>
+        <button onclick="alterarTurma()">Alterar</button>
+        <button onclick="excluirTurma()">Excluir</button>
+      </div>
+
+      <table class="table" id="tabela-turmas">
+        <thead>
+          <tr>
+            <th>Selecionar</th>
+            <th>Código</th>
+            <th>Nome</th>
+            <th>Professor</th>
+            <th>Curso</th>
+            <th>Ano</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-turmas"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="menu.js"></script>
+  <script>
+    const turmas = [
+      {id:"T001", nome:"Turma A", professor:"Carlos Souza", curso:"teste", ano:"2025"},
+      {id:"T002", nome:"Turma B", professor:"Fernanda Lima", curso:"teste", ano:"2025"},
+      {id:"T003", nome:"Turma C", professor:"João Silva", curso:"teste", ano:"2025"}
+    ];
+
+    const tbody = document.getElementById("tbody-turmas");
+
+    turmas.forEach(t => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input type="radio" name="turmaSelecionada" value="${t.id}"></td>
+        <td>${t.id}</td>
+        <td>${t.nome}</td>
+        <td>${t.professor}</td>
+        <td>${t.curso}</td>
+        <td>${t.ano}</td>
+        <td><button onclick="administrarTurma(\'${t.id}\')">Administrar</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    function getTurmaSelecionada() {
+      const sel = document.querySelector("input[name=\"turmaSelecionada\"]:checked");
+      if (!sel) { alert("Selecione uma turma!"); return null; }
+      return sel.value;
+    }
+
+    function incluirTurma() { window.location.href = "nova-turma.html"; }
+    function alterarTurma() {
+      const id = getTurmaSelecionada();
+      if (id) window.location.href = `alterar-turma.html?id=${id}`;
+    }
+    function excluirTurma() {
+      const id = getTurmaSelecionada();
+      if (!id) return;
+      if (confirm("Tem certeza que deseja excluir essa turma?")) {
+        alert("Função que exclui turma no backend");
+      }
+    }
+
+    function filtrarTabela() {
+      const filter = document.getElementById("buscarTurma").value.toLowerCase();
+      tbody.querySelectorAll("tr").forEach(tr => {
+        tr.style.display = tr.textContent.toLowerCase().includes(filter) ? "" : "none";
+      });
+    }
+
+    function administrarTurma(id) {
+      window.location.href = `administrar-turma.html?turma=${id}`;
+    }
+  </script>
+</body>
+</html>
+

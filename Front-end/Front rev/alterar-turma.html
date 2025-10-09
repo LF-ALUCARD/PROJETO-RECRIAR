@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alterar Turma - Sistema de Gestão Escolar</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Container principal */
+    .container {
+      max-width: 900px;
+      margin: 80px auto 2rem auto; /* abaixo da barra superior */
+      padding: 1.5rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      /* Removido margin-left para centralizar o container, considerando o menu lateral */
+      /* O menu lateral deve ser tratado com CSS próprio para não afetar o container principal */
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        margin-left: 0;
+      }
+    }
+
+    /* Formulários */
+    input[type="text"], input[type="time"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 0.75rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      border: none;
+      background-color: #3498db;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    .table-container {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table th, .table td {
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    .table thead {
+      position: sticky;
+      top: 0;
+      background: #f1f1f1;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Menu lateral + barra superior será injetado pelo menu.js -->
+<div id="menu-container"></div>
+
+<div class="container">
+  <h2>Alterar Turma</h2>
+  <form id="form-turma">
+    <label for="nomeTurma">Nome da Turma</label>
+    <input type="text" id="nomeTurma" required>
+
+    <label for="codigoTurma">Código da Turma</label>
+    <input type="text" id="codigoTurma" readonly>
+
+    <label for="curso">Curso</label>
+    <input type="text" id="curso" required>
+
+    <label for="horaInicio">Horário (De / Até)</label>
+    <div style="display:flex; gap:1rem; align-items:center;">
+      <input type="time" id="horaInicio" required>
+      <span>até</span>
+      <input type="time" id="horaFim" required>
+    </div>
+
+    <h3>Seleção de Professores</h3>
+    <div class="table-container">
+      <table class="table" id="tabela-professores">
+        <thead>
+          <tr>
+            <th>Selecionar</th>
+            <th>Nome</th>
+            <th>Curso</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- BACKEND: Aqui devem ser carregados os professores disponíveis e os já associados à turma -->
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Seleção de Alunos</h3>
+    <input type="text" id="buscarAluno" placeholder="Buscar aluno..." onkeyup="filtrarAlunos()" style="margin-bottom:0.5rem;">
+
+    <div class="table-container">
+      <table class="table" id="tabela-alunos">
+        <thead>
+          <tr>
+            <th>Selecionar</th>
+            <th>Matrícula</th>
+            <th>Nome</th>
+            <th>Responsável</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- BACKEND: Aqui devem ser carregados os alunos disponíveis e os já associados à turma -->
+        </tbody>
+      </table>
+    </div>
+
+    <button type="submit" style="margin-top:1rem;">Salvar Alterações</button>
+  </form>
+</div>
+
+<!-- Scripts -->
+<script src="menu.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // BACKEND: Carregar o menu e barra superior
+    // O menu.js já faz isso, mas se precisar de dados do backend para o menu, inserir aqui.
+
+    const params = new URLSearchParams(window.location.search);
+    const turmaId = params.get('id');
+
+    if (turmaId) {
+      carregarTurma(turmaId);
+      // BACKEND: Chamar função para carregar professores e alunos para seleção
+      carregarProfessoresDisponiveis();
+      carregarAlunosDisponiveis();
+    } else {
+      // BACKEND: Redirecionar ou mostrar mensagem de erro se o ID da turma não for encontrado
+      console.error('ID da turma não fornecido na URL.');
+      alert('ID da turma não fornecido. Por favor, retorne à página de turmas.');
+      // window.location.href = 'turmas.html'; // Exemplo de redirecionamento
+    }
+
+    document.getElementById('form-turma').addEventListener('submit', function(event) {
+      event.preventDefault();
+      salvarAlteracoesTurma(turmaId);
+    });
+  });
+
+  async function carregarTurma(id) {
+    // BACKEND: Substituir esta simulação pela chamada à API para buscar os dados da turma pelo ID
+    try {
+      // Exemplo de como seria a chamada real (assumindo uma API REST)
+      // const response = await fetch(`/api/turmas/${id}`);
+      // if (!response.ok) throw new Error('Erro ao carregar turma');
+      // const turma = await response.json();
+
+      // Dados mock para demonstração
+      const turmasMock = [
+        {id:"T001", nome:"Turma A - 1º Ano", curso:"Ensino Fundamental", horaInicio:"08:00", horaFim:"12:00", professores:["P001", "P002"], alunos:["A001","A002"]},
+        {id:"T002", nome:"Turma B - 2º Ano", curso:"Ensino Fundamental", horaInicio:"08:00", horaFim:"12:00", professores:["P003"], alunos:["A003","A004"]}
+      ];
+      const turma = turmasMock.find(t => t.id === id);
+
+      if (!turma) {
+        console.error('Turma não encontrada.');
+        alert('Turma não encontrada.');
+        // window.location.href = 'turmas.html'; // Exemplo de redirecionamento
+        return;
+      }
+
+      document.getElementById('nomeTurma').value = turma.nome;
+      document.getElementById('codigoTurma').value = turma.id;
+      document.getElementById('curso').value = turma.curso;
+      document.getElementById('horaInicio').value = turma.horaInicio;
+      document.getElementById('horaFim').value = turma.horaFim;
+
+      // BACKEND: Chamar funções para pré-selecionar professores e alunos com base nos dados da turma
+      // preencherTabelaProfessores(turma.professores);
+      // preencherTabelaAlunos(turma.alunos);
+
+    } catch (error) {
+      console.error('Erro ao carregar dados da turma:', error);
+      alert('Não foi possível carregar os dados da turma.');
+    }
+  }
+
+  async function carregarProfessoresDisponiveis() {
+    // BACKEND: Substituir esta simulação pela chamada à API para buscar todos os professores disponíveis
+    try {
+      // const response = await fetch('/api/professores');
+      // if (!response.ok) throw new Error('Erro ao carregar professores');
+      // const professores = await response.json();
+
+      const professoresMock = [
+        {id: "P001", nome: "Carlos Silva", curso: "Matemática"},
+        {id: "P002", nome: "Ana Souza", curso: "Português"},
+        {id: "P003", nome: "Pedro Costa", curso: "História"}
+      ];
+      preencherTabelaProfessores(professoresMock);
+    } catch (error) {
+      console.error('Erro ao carregar professores disponíveis:', error);
+      alert('Não foi possível carregar a lista de professores.');
+    }
+  }
+
+  function preencherTabelaProfessores(professores, professoresAssociadosIds = []) {
+    const tbody = document.getElementById('tabela-professores').querySelector('tbody');
+    tbody.innerHTML = ''; // Limpa a tabela antes de preencher
+
+    professores.forEach(professor => {
+      const row = tbody.insertRow();
+      const isChecked = professoresAssociadosIds.includes(professor.id);
+      row.innerHTML = `
+        <td><input type="checkbox" data-id="${professor.id}" ${isChecked ? 'checked' : ''}></td>
+        <td>${professor.nome}</td>
+        <td>${professor.curso}</td>
+      `;
+    });
+  }
+
+  async function carregarAlunosDisponiveis() {
+    // BACKEND: Substituir esta simulação pela chamada à API para buscar todos os alunos disponíveis
+    try {
+      // const response = await fetch('/api/alunos');
+      // if (!response.ok) throw new Error('Erro ao carregar alunos');
+      // const alunos = await response.json();
+
+      const alunosMock = [
+        {id: "A001", matricula: "2023001", nome: "Aluno 1", responsavel: "Pai do Aluno 1"},
+        {id: "A002", matricula: "2023002", nome: "Aluno 2", responsavel: "Mãe do Aluno 2"},
+        {id: "A003", matricula: "2023003", nome: "Aluno 3", responsavel: "Pai do Aluno 3"}
+      ];
+      preencherTabelaAlunos(alunosMock);
+    } catch (error) {
+      console.error('Erro ao carregar alunos disponíveis:', error);
+      alert('Não foi possível carregar a lista de alunos.');
+    }
+  }
+
+  function preencherTabelaAlunos(alunos, alunosAssociadosIds = []) {
+    const tbody = document.getElementById('tabela-alunos').querySelector('tbody');
+    tbody.innerHTML = ''; // Limpa a tabela antes de preencher
+
+    alunos.forEach(aluno => {
+      const row = tbody.insertRow();
+      const isChecked = alunosAssociadosIds.includes(aluno.id);
+      row.innerHTML = `
+        <td><input type="checkbox" data-id="${aluno.id}" ${isChecked ? 'checked' : ''}></td>
+        <td>${aluno.matricula}</td>
+        <td>${aluno.nome}</td>
+        <td>${aluno.responsavel}</td>
+      `;
+    });
+  }
+
+  function filtrarAlunos() {
+    const input = document.getElementById('buscarAluno');
+    const filter = input.value.toLowerCase();
+    const tbody = document.getElementById('tabela-alunos').querySelector('tbody');
+    const rows = tbody.getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+      const nomeTd = rows[i].getElementsByTagName('td')[2]; // Coluna do nome
+      if (nomeTd) {
+        const textValue = nomeTd.textContent || nomeTd.innerText;
+        if (textValue.toLowerCase().indexOf(filter) > -1) {
+          rows[i].style.display = '';
+        } else {
+          rows[i].style.display = 'none';
+        }
+      }
+    }
+  }
+
+  async function salvarAlteracoesTurma(turmaId) {
+    const nomeTurma = document.getElementById('nomeTurma').value;
+    const curso = document.getElementById('curso').value;
+    const horaInicio = document.getElementById('horaInicio').value;
+    const horaFim = document.getElementById('horaFim').value;
+
+    const professoresSelecionados = Array.from(document.querySelectorAll('#tabela-professores tbody input[type="checkbox"]:checked'))
+                                      .map(checkbox => checkbox.dataset.id);
+    const alunosSelecionados = Array.from(document.querySelectorAll('#tabela-alunos tbody input[type="checkbox"]:checked'))
+                                  .map(checkbox => checkbox.dataset.id);
+
+    const dadosTurmaAtualizados = {
+      id: turmaId,
+      nome: nomeTurma,
+      curso: curso,
+      horaInicio: horaInicio,
+      horaFim: horaFim,
+      professores: professoresSelecionados,
+      alunos: alunosSelecionados
+    };
+
+    // BACKEND: Enviar dadosTurmaAtualizados para a API de atualização da turma
+    try {
+      // Exemplo de como seria a chamada real (assumindo uma API REST PUT/PATCH)
+      // const response = await fetch(`/api/turmas/${turmaId}`, {
+      //   method: 'PUT',
+      //   headers: {
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify(dadosTurmaAtualizados)
+      // });
+
+      // if (!response.ok) throw new Error('Erro ao salvar alterações da turma');
+
+      console.log('Dados da turma atualizados:', dadosTurmaAtualizados);
+      alert('Turma alterada com sucesso!');
+      // BACKEND: Opcional: redirecionar para a página de listagem de turmas ou atualizar a página
+      // window.location.href = 'turmas.html';
+
+    } catch (error) {
+      console.error('Erro ao salvar alterações da turma:', error);
+      alert('Não foi possível salvar as alterações da turma.');
+    }
+  }
+</script>
+
+</body>
+</html>
+

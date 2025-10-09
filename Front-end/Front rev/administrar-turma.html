@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrar Turma</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Ajustes específicos para tabela de alunos */
+    .table input[type="number"] { width: 60px; }
+    .actions { display:flex; gap:1rem; justify-content:flex-end; margin-top:1rem; }
+  </style>
+</head>
+<body>
+  <!-- Menu será carregado via menu.js -->
+  <div id="menu-container"></div>
+
+  <main>
+    <div class="container">
+      <h2>Administrar Turma</h2>
+      <p id="titulo-turma"></p>
+
+      <table class="table" id="tabela-alunos">
+        <thead>
+          <tr>
+            <th>Aluno</th>
+            <th>Faltas</th>
+            <th>Nota</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-alunos"></tbody>
+      </table>
+
+      <div class="actions">
+        <button onclick="salvar()">Salvar Alterações</button>
+        <button onclick="voltar()">Voltar</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="menu.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // BACKEND: Carregar o menu e barra superior
+      // O menu.js já faz isso, mas se precisar de dados do backend para o menu, inserir aqui.
+
+      // Pega ID da turma da URL
+      const turmaId = new URL(window.location.href).searchParams.get("turma");
+
+      // Atualiza título da turma
+      const titulo = document.getElementById("titulo-turma");
+      if (turmaId) {
+        titulo.innerText = `Turma: ${turmaId}`;
+        carregarAlunosDaTurma(turmaId);
+      } else {
+        titulo.innerText = "Turma não encontrada";
+        console.error("ID da turma não fornecido na URL.");
+        alert("ID da turma não fornecido. Por favor, retorne à página de turmas.");
+        // BACKEND: Opcional: redirecionar para a página de listagem de turmas
+        // window.location.href = 'turmas.html';
+      }
+    });
+
+    async function carregarAlunosDaTurma(turmaId) {
+      // BACKEND: Substituir esta simulação pela chamada à API para buscar os alunos da turma
+      try {
+        // Exemplo de como seria a chamada real (assumindo uma API REST)
+        // const response = await fetch(`/api/turmas/${turmaId}/alunos`);
+        // if (!response.ok) throw new Error("Erro ao carregar alunos da turma");
+        // const alunos = await response.json();
+
+        // Simulação de alunos por turma
+        const alunosSimulados = {
+          "T001": [
+            {id:"A001", nome:"Ana Paula", faltas:2, nota:8},
+            {id:"A002", nome:"Lucas Lima", faltas:1, nota:7}
+          ],
+          "T002": [
+            {id:"A003", nome:"Carla Mendes", faltas:0, nota:9},
+            {id:"A004", nome:"Bruno Silva", faltas:3, nota:6}
+          ],
+          "T003": [
+            {id:"A005", nome:"João Pedro", faltas:2, nota:7},
+            {id:"A006", nome:"Fernanda Souza", faltas:1, nota:8}
+          ]
+        };
+
+        const tbody = document.getElementById("tbody-alunos");
+        tbody.innerHTML = ''; // Limpa a tabela antes de preencher
+        const alunos = alunosSimulados[turmaId] || [];
+
+        // Preenche tabela de alunos
+        if (alunos.length > 0) {
+          alunos.forEach(a => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${a.nome}</td>
+              <td><input type="number" min="0" value="${a.faltas}" id="faltas-${a.id}"></td>
+              <td><input type="number" min="0" max="10" step="0.1" value="${a.nota}" id="nota-${a.id}"></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="3">Nenhum aluno encontrado para esta turma.</td>`;
+          tbody.appendChild(tr);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar alunos da turma:", error);
+        alert("Não foi possível carregar os alunos da turma.");
+      }
+    }
+
+    // Função para salvar alterações (simula backend)
+    async function salvar() {
+      const tbody = document.getElementById("tbody-alunos");
+      const rows = tbody.querySelectorAll("tr");
+      const dadosAtualizadosAlunos = [];
+
+      rows.forEach(row => {
+        const alunoId = row.querySelector("input[id^='faltas-']").id.replace('faltas-', '');
+        const faltas = document.getElementById(`faltas-${alunoId}`).value;
+        const nota = document.getElementById(`nota-${alunoId}`).value;
+        dadosAtualizadosAlunos.push({ id: alunoId, faltas: parseInt(faltas), nota: parseFloat(nota) });
+      });
+
+      // BACKEND: Enviar dadosAtualizadosAlunos para a API de atualização de faltas/notas
+      try {
+        // Exemplo de como seria a chamada real (assumindo uma API REST PUT/PATCH)
+        // const response = await fetch(`/api/turmas/${turmaId}/alunos/atualizar-notas-faltas`, {
+        //   method: 'PUT',
+        //   headers: {
+        //     'Content-Type': 'application/json'
+        //   },
+        //   body: JSON.stringify(dadosAtualizadosAlunos)
+        // });
+
+        // if (!response.ok) throw new Error('Erro ao salvar alterações');
+
+        console.log("Dados de alunos atualizados:", dadosAtualizadosAlunos);
+        alert("Alterações salvas com sucesso! (Simulado)");
+        // BACKEND: Opcional: recarregar a página ou redirecionar
+      } catch (error) {
+        console.error("Erro ao salvar alterações:", error);
+        alert("Não foi possível salvar as alterações.");
+      }
+    }
+
+    // Voltar para a lista de turmas
+    function voltar() {
+      window.location.href = "turmas.html"; // ou sua página de listagem de turmas
+    }
+  </script>
+</body>
+</html>
+

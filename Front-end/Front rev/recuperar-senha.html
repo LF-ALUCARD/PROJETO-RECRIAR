@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperar Senha - Sistema Alunos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header><h1>Instituto Recriar</h1></header>
+  <div class="container">
+    <h2>Recuperar Senha</h2>
+    <p>Digite seu e-mail para receber as instruções de recuperação de senha.</p>
+    
+    <form id="form-recuperar-senha" action="#" method="post">
+      <div>
+        <label for="email">E-mail</label>
+        <input type="email" id="email" name="email" required>
+        <span class="error-message" id="email-error"></span>
+      </div>
+
+      <button type="submit">Enviar Instruções</button>
+      
+      <div class="form-actions">
+        <a href="index.html" class="btn-secundario">Voltar ao Login</a>
+      </div>
+    </form>
+
+    <!-- Mensagem de feedback -->
+    <div id="feedback-message" class="feedback-message" style="display: none;"></div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("form-recuperar-senha").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById("email").value;
+        const feedbackDiv = document.getElementById("feedback-message");
+        
+        // Limpar mensagens de erro e feedback anteriores
+        document.getElementById("email-error").textContent = "";
+        feedbackDiv.style.display = "none";
+        feedbackDiv.className = "feedback-message";
+
+        // Validação básica
+        if (!email) {
+          document.getElementById("email-error").textContent = "Por favor, digite seu e-mail.";
+          return;
+        }
+        
+        // BACKEND: Substituir esta simulação pela chamada à API para solicitar recuperação de senha
+        try {
+          // Exemplo de como seria a chamada real (assumindo uma API REST)
+          // const response = await fetch("/api/recuperar-senha", {
+          //   method: "POST",
+          //   headers: {
+          //     "Content-Type": "application/json"
+          //   },
+          //   body: JSON.stringify({ email: email })
+          // });
+
+          // if (!response.ok) {
+          //   const errorData = await response.json();
+          //   throw new Error(errorData.message || "Erro ao solicitar recuperação de senha");
+          // }
+
+          feedbackDiv.style.display = "block";
+          feedbackDiv.className = "feedback-message success";
+          feedbackDiv.textContent = "Instruções de recuperação enviadas para seu e-mail! (Simulado)";
+          
+          // Limpar formulário
+          this.reset();
+        } catch (error) {
+          console.error("Erro ao recuperar senha:", error);
+          feedbackDiv.style.display = "block";
+          feedbackDiv.className = "feedback-message error";
+          feedbackDiv.textContent = error.message || "Não foi possível enviar as instruções. Tente novamente.";
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+

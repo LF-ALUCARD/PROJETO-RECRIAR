@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novo Professor - Sistema Alunos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Menu via JS -->
+  <div id="menu-container"></div>
+
+  <main>
+    <div class="container">
+      <h2>Novo Professor</h2>
+      <form id="form-novo-professor" action="#" method="post">
+        <label for="nome">Nome</label>
+        <input type="text" id="nome" name="nome" required>
+
+        <label for="dataNascimento">Data de Nascimento</label>
+        <input type="date" id="dataNascimento" name="dataNascimento" required>
+
+        <label for="documento">Documento de Identidade</label>
+        <input type="text" id="documento" name="documento" required>
+
+        <label for="rua">Rua</label>
+        <input type="text" id="rua" name="rua" required>
+
+        <label for="numero">Número</label>
+        <input type="text" id="numero" name="numero" required>
+
+        <label for="bairro">Bairro</label>
+        <input type="text" id="bairro" name="bairro" required>
+
+        <label for="cidade">Cidade</label>
+        <input type="text" id="cidade" name="cidade" required>
+
+        <label for="telefone">Telefone</label>
+        <input type="tel" id="telefone" name="telefone" required>
+
+        <div class="form-actions">
+          <button type="submit">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script src="menu.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // BACKEND: Carregar o menu e barra superior
+      // O menu.js já faz isso, mas se precisar de dados do backend para o menu, inserir aqui.
+
+      document.getElementById("form-novo-professor").addEventListener("submit", function(e){
+        e.preventDefault();
+
+        const novoProfessor = {
+          nome: document.getElementById("nome").value,
+          dataNascimento: document.getElementById("dataNascimento").value,
+          documento: document.getElementById("documento").value,
+          rua: document.getElementById("rua").value,
+          numero: document.getElementById("numero").value,
+          bairro: document.getElementById("bairro").value,
+          cidade: document.getElementById("cidade").value,
+          telefone: document.getElementById("telefone").value
+        };
+
+        // BACKEND: Enviar novoProfessor para a API de criação de professor
+        console.log("Dados do novo professor:", novoProfessor);
+        alert("Professor cadastrado com sucesso! (Simulado)");
+        // BACKEND: Opcional: redirecionar para a página de listagem de professores
+        // window.location.href = 'professores.html';
+      });
+    });
+  </script>
+</body>
+</html>
+

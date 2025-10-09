@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Alunos - Sistema de Gestão Escolar</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="common.js" defer></script>
+</head>
+<body>
+    <!-- Container que será preenchido pelo JS -->
+    <div id="menu-container"></div>
+
+    <main>
+        <div class="container">
+            <h2>Gestão de Alunos</h2>
+
+            <!-- Mensagem de feedback -->
+            <div id="feedback-message" class="feedback-message" style="display: none;"></div>
+
+            <!-- Barra de opções de CRUD -->
+            <div class="crud-bar">
+                <!-- Campo de busca -->
+                <input type="search" 
+                       id="buscar-aluno" 
+                       placeholder="Buscar por nome, documento ou telefone..." 
+                       aria-label="Buscar alunos">
+
+                <!-- Botões de ação -->
+                <button type="button" 
+                        id="btn-incluir" 
+                        class="btn-success" 
+                        onclick="incluirAluno()">
+                    Novo Aluno
+                </button>
+                <button type="button" 
+                        id="btn-alterar" 
+                        onclick="alterarAluno()" 
+                        disabled>
+                    Editar
+                </button>
+                <button type="button" 
+                        id="btn-excluir" 
+                        class="btn-danger" 
+                        onclick="excluirAluno()" 
+                        disabled>
+                    Excluir
+                </button>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <span class="stat-number" id="total-alunos-count">0</span>
+                    <span class="stat-label">Total de Alunos</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="alunos-ativos-count">0</span>
+                    <span class="stat-label">Alunos Ativos</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="alunos-filtrados-count">0</span>
+                    <span class="stat-label">Resultados da Busca</span>
+                </div>
+            </div>
+
+            <!-- Tabela de alunos -->
+            <div class="table-container">
+                <table class="table" id="tabela-alunos">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" 
+                                       id="select-all" 
+                                       aria-label="Selecionar todos os alunos">
+                            </th>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Documento</th>
+                            <th>Telefone</th>
+                            <th>E-mail</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-alunos">
+                        <!-- BACKEND: Dados serão carregados via JavaScript a partir de uma API -->
+                    </tbody>
+                </table>
+                
+                <!-- Mensagem quando não há dados -->
+                <div id="no-data-message" class="no-data-message" style="display: none;">
+                    <p>Nenhum aluno encontrado.</p>
+                    <button type="button" onclick="incluirAluno()" class="btn-success">
+                        Cadastrar Primeiro Aluno
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paginação -->
+            <div class="pagination" id="pagination-container" style="display: none;">
+                <button type="button" id="btn-prev" onclick="previousPage()" disabled>
+                    Anterior
+                </button>
+                <span id="page-info">Página 1 de 1</span>
+                <button type="button" id="btn-next" onclick="nextPage()" disabled>
+                    Próxima
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="common.js"></script>
+    <script src="menu.js"></script>
+    <script>
+        // ================================
+        // DADOS MOCK DOS ALUNOS (BACKEND: Substituir por chamada à API)
+        // ================================
+        let alunos = [
+            { 
+                id: "A001", 
+                nome: "Carlos Eduardo Souza", 
+                documento: "123.456.789-01", 
+                telefone: "(27) 99999-0000",
+                email: "carlos.souza@email.com",
+                status: "Ativo",
+                dataCadastro: "2024-01-15"
+            },
+            { 
+                id: "A002", 
+                nome: "João Pedro Pereira", 
+                documento: "987.654.321-02", 
+                telefone: "(27) 98888-1111",
+                email: "joao.pereira@email.com",
+                status: "Ativo",
+                dataCadastro: "2024-01-20"
+            },
+            { 
+                id: "A003", 
+                nome: "Maria Silva Santos", 
+                documento: "456.123.789-03", 
+                telefone: "(27) 97777-2222",
+                email: "maria.silva@email.com",
+                status: "Ativo",
+                dataCadastro: "2024-02-01"
+            },
+            { 
+                id: "A004", 
+                nome: "Ana Carolina Oliveira", 
+                documento: "321.654.987-04", 
+                telefone: "(27) 96666-3333",
+                email: "ana.oliveira@email.com",
+                status: "Inativo",
+                dataCadastro: "2024-02-10"
+            },
+            { 
+                id: "A005", 
+                nome: "Pedro Henrique Costa", 
+                documento: "789.123.456-05", 
+                telefone: "(27) 95555-4444",
+                email: "pedro.costa@email.com",
+                status: "Ativo",
+                dataCadastro: "2024-02-15"
+            }
+        ];
+
+        // Variáveis de controle
+        let alunosFiltrados = [...alunos];
+        let currentPage = 1;
+        const itemsPerPage = CONFIG.ITEMS_PER_PAGE; // BACKEND: CONFIG.ITEMS_PER_PAGE pode ser um valor padrão ou vir do backend
+        let selectedAlunos = new Set();
+
+        // ================================
+        // INICIALIZAÇÃO
+        // ================================
+        document.addEventListener("DOMContentLoaded", function() {
+            // BACKEND: Verificar autenticação
+            if (!Auth.requireAuth()) return; // Auth.requireAuth() deve ser adaptado para o sistema de autenticação do backend
+
+            // Configurar eventos
+            setupEventListeners();
+            
+            // Carregar dados
+            // BACKEND: loadAlunos() deve chamar a API para buscar os alunos
+            loadAlunos();
+            
+            // Atualizar estatísticas
+            // BACKEND: updateStats() pode precisar de dados do backend
+            updateStats();
+        });
+
+        // ================================
+        // CONFIGURAR EVENT LISTENERS
+        // ================================
+        function setupEventListeners() {
+            // Busca em tempo real
+            const searchInput = document.getElementById("buscar-aluno");
+            searchInput.addEventListener("input", debounce(filtrarAlunos, 300));
+
+            // Selecionar todos
+            const selectAllCheckbox = document.getElementById("select-all");
+            selectAllCheckbox.addEventListener("change", toggleSelectAll);
+
+            // Teclas de atalho
+            document.addEventListener("keydown", handleKeyboardShortcuts);
+        }
+
+        // ================================
+        // CARREGAR ALUNOS NA TABELA
+        // ================================
+        async function loadAlunos() { // BACKEND: Tornar assíncrona para chamadas de API
+            const tbody = document.getElementById("tbody-alunos");
+            const noDataMessage = document.getElementById("no-data-message");
+            
+            // Limpar tabela
+            Table.clearBody("tabela-alunos");
+
+            // BACKEND: Chamar API para buscar alunos
+            // try {
+            //   const response = await fetch(`/api/alunos?page=${currentPage}&limit=${itemsPerPage}&search=${document.getElementById("buscar-aluno").value}`);
+            //   if (!response.ok) throw new Error("Erro ao carregar alunos");
+            //   const data = await response.json(); // data.alunos, data.totalAlunos, etc.
+            //   alunos = data.alunos; // Atualizar a lista de alunos com os dados do backend
+            //   alunosFiltrados = data.alunos; // Se a API já retorna filtrado/paginado
+            // } catch (error) {
+            //   console.error("Erro ao buscar alunos:", error);
+            //   UI.showMessage("Não foi possível carregar os alunos.", "error");
+            //   return;
+            // }
+            
+            if (alunosFiltrados.length === 0) {
+                document.querySelector(".table-container table").style.display = "none";
+                noDataMessage.style.display = "block";
+                document.getElementById("pagination-container").style.display = "none";
+                return;
+            }
+
+            document.querySelector(".table-container table").style.display = "table";
+            noDataMessage.style.display = "none";
+
+            // Calcular paginação (se a API não fizer isso, ou para dados mock)
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const alunosPage = alunosFiltrados.slice(startIndex, endIndex);
+
+            // Criar linhas
+            alunosPage.forEach(aluno => {
+                const row = createAlunoRow(aluno);
+                Table.addRow("tabela-alunos", row);
+            });
+
+            // Atualizar paginação
+            updatePagination();
+            
+            // Atualizar botões
+            updateActionButtons();
+        }
+
+        // ================================
+        // CRIAR LINHA DA TABELA
+        // ================================
+        function createAlunoRow(aluno) {
+            const row = document.createElement("tr");
+            row.dataset.alunoId = aluno.id;
+            
+            const isSelected = selectedAlunos.has(aluno.id);
+            const statusClass = aluno.status === "Ativo" ? "status-active" : "status-inactive";
+            
+            row.innerHTML = `
+                <td>
+                    <input type="checkbox" 
+                           class="aluno-checkbox" 
+                           value="${aluno.id}" 
+                           ${isSelected ? "checked" : ""}
+                           onchange="toggleAlunoSelection(\'${aluno.id}\')">
+                </td>
+                <td>${aluno.id}</td>
+                <td>${aluno.nome}</td>
+                <td>${aluno.documento}</td>
+                <td>${Format.phone(aluno.telefone)}</td>
+                <td>${aluno.email}</td>
+                <td><span class="status-badge ${statusClass}">${aluno.status}</span></td>
+                <td class="actions">
+                    <button type="button" 
+                            class="btn-sm" 
+                            onclick="editarAluno(\'${aluno.id}\')" 
+                            title="Editar aluno">
+                        ✏️
+                    </button>
+                    <button type="button" 
+                            class="btn-sm btn-danger" 
+                            onclick="confirmarExclusao(\'${aluno.id}\')" 
+                            title="Excluir aluno">
+                        🗑️
+                    </button>
+                </td>
+            `;
+            
+            return row;
+        }
+
+        // ================================
+        // FILTRAR ALUNOS
+        // ================================
+        async function filtrarAlunos() { // BACKEND: Tornar assíncrona para chamadas de API
+            const searchTerm = document.getElementById("buscar-aluno").value.toLowerCase();
+            
+            // BACKEND: Se a filtragem for feita no backend, chamar a API com o searchTerm
+            // try {
+            //   const response = await fetch(`/api/alunos?search=${searchTerm}`);
+            //   if (!response.ok) throw new Error("Erro ao filtrar alunos");
+            //   alunosFiltrados = await response.json();
+            // } catch (error) {
+            //   console.error("Erro ao filtrar alunos:", error);
+            //   UI.showMessage("Não foi possível filtrar os alunos.", "error");
+            //   return;
+            // }
+
+            if (!searchTerm) {
+                alunosFiltrados = [...alunos]; // Usar a lista original se não houver termo de busca
+            } else {
+                alunosFiltrados = alunos.filter(aluno => 
+                    aluno.nome.toLowerCase().includes(searchTerm) ||
+                    aluno.documento.toLowerCase().includes(searchTerm) ||
+                    aluno.telefone.toLowerCase().includes(searchTerm) ||
+                    aluno.email.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            currentPage = 1;
+            selectedAlunos.clear();
+            loadAlunos();
+            updateStats();
+        }
+
+        // ================================
+        // SELEÇÃO DE ALUNOS
+        // ================================
+        function toggleAlunoSelection(alunoId) {
+            if (selectedAlunos.has(alunoId)) {
+                selectedAlunos.delete(alunoId);
+            } else {
+                selectedAlunos.add(alunoId);
+            }
+            
+            updateActionButtons();
+            updateSelectAllCheckbox();
+        }
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById("select-all");
+            const checkboxes = document.querySelectorAll(".aluno-checkbox");
+            
+            if (selectAllCheckbox.checked) {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                    selectedAlunos.add(checkbox.value);
+                });
+            } else {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                    selectedAlunos.delete(checkbox.value);
+                });
+            }
+            
+            updateActionButtons();
+        }
+
+        function updateSelectAllCheckbox() {
+            const selectAllCheckbox = document.getElementById("select-all");
+            const checkboxes = document.querySelectorAll(".aluno-checkbox");
+            const checkedBoxes = document.querySelectorAll(".aluno-checkbox:checked");
+            
+            if (checkedBoxes.length === 0) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = false;
+            } else if (checkedBoxes.length === checkboxes.length) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = true;
+            } else {
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+
+        // ================================
+        // ATUALIZAR BOTÕES DE AÇÃO
+        // ================================
+        function updateActionButtons() {
+            const hasSelection = selectedAlunos.size > 0;
+            const singleSelection = selectedAlunos.size === 1;
+            
+            document.getElementById("btn-alterar").disabled = !singleSelection;
+            document.getElementById("btn-excluir").disabled = !hasSelection;
+        }
+
+        // ================================
+        // FUNÇÕES DE CRUD
+        // ================================
+        function incluirAluno() {
+            window.location.href = "novo-aluno.html"; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        function alterarAluno() {
+            if (selectedAlunos.size !== 1) {
+                UI.showMessage("Selecione exatamente um aluno para editar.", "warning");
+                return;
+            }
+            
+            const alunoId = Array.from(selectedAlunos)[0];
+            window.location.href = `alterar-aluno.html?id=${alunoId}`; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        function editarAluno(alunoId) {
+            window.location.href = `alterar-aluno.html?id=${alunoId}`; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        async function excluirAluno() { // BACKEND: Tornar assíncrona para chamadas de API
+            if (selectedAlunos.size === 0) {
+                UI.showMessage("Selecione pelo menos um aluno para excluir.", "warning");
+                return;
+            }
+            
+            const count = selectedAlunos.size;
+            const message = count === 1 
+                ? "Tem certeza que deseja excluir este aluno?" 
+                : `Tem certeza que deseja excluir ${count} alunos?`;
+            
+            if (confirm(message)) {
+                // BACKEND: Chamar API para exclusão de alunos
+                // try {
+                //   const response = await fetch("/api/alunos/batch-delete", {
+                //     method: "DELETE",
+                //     headers: { "Content-Type": "application/json" },
+                //     body: JSON.stringify({ ids: Array.from(selectedAlunos) })
+                //   });
+                //   if (!response.ok) throw new Error("Erro ao excluir alunos");
+                //   // Lógica para remover do array local se necessário, ou recarregar
+                // } catch (error) {
+                //   console.error("Erro ao excluir alunos:", error);
+                //   UI.showMessage("Não foi possível excluir os alunos.", "error");
+                //   return;
+                // }
+
+                // Simular exclusão (integrar com backend)
+                selectedAlunos.forEach(alunoId => {
+                    const index = alunos.findIndex(a => a.id === alunoId);
+                    if (index > -1) {
+                        alunos.splice(index, 1);
+                    }
+                });
+                
+                selectedAlunos.clear();
+                filtrarAlunos(); // Recarregar dados após exclusão
+                UI.showMessage(`${count} aluno(s) excluído(s) com sucesso.`, "success");
+            }
+        }
+
+        async function confirmarExclusao(alunoId) { // BACKEND: Tornar assíncrona para chamadas de API
+            const aluno = alunos.find(a => a.id === alunoId);
+            if (!aluno) return;
+            
+            if (confirm(`Tem certeza que deseja excluir o aluno \"${aluno.nome}\"?`)) {
+                // BACKEND: Chamar API para exclusão de um único aluno
+                // try {
+                //   const response = await fetch(`/api/alunos/${alunoId}`, {
+                //     method: "DELETE"
+                //   });
+                //   if (!response.ok) throw new Error("Erro ao excluir aluno");
+                // } catch (error) {
+                //   console.error("Erro ao excluir aluno:", error);
+                //   UI.showMessage("Não foi possível excluir o aluno.", "error");
+                //   return;
+                // }
+
+                const index = alunos.findIndex(a => a.id === alunoId);
+                if (index > -1) {
+                    alunos.splice(index, 1);
+                    filtrarAlunos(); // Recarregar dados após exclusão
+                    UI.showMessage("Aluno excluído com sucesso.", "success");
+                }
+            }
+        }
+
+        // ================================
+        // PAGINAÇÃO
+        // ================================
+        function updatePagination() {
+            const totalPages = Math.ceil(alunosFiltrados.length / itemsPerPage);
+            const paginationContainer = document.getElementById("pagination-container");
+            
+            if (totalPages <= 1) {
+                paginationContainer.style.display = "none";
+                return;
+            }
+            
+            paginationContainer.style.display = "flex";
+            
+            document.getElementById("btn-prev").disabled = currentPage === 1;
+            document.getElementById("btn-next").disabled = currentPage === totalPages;
+            document.getElementById("page-info").textContent = `Página ${currentPage} de ${totalPages}`;
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(alunosFiltrados.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadAlunos();
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadAlunos();
+            }
+        }
+
+        // ================================
+        // ATUALIZAR ESTATÍSTICAS
+        // ================================
+        function updateStats() {
+            document.getElementById("total-alunos-count").textContent = alunos.length; // BACKEND: Total de alunos do backend
+            document.getElementById("alunos-ativos-count").textContent = alunos.filter(a => a.status === "Ativo").length; // BACKEND: Contagem de ativos do backend
+            document.getElementById("alunos-filtrados-count").textContent = alunosFiltrados.length;
+        }
+
+        // ================================
+        // UTILS (do common.js, se não estiver globalmente disponível)
+        // ================================
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+    </script>
+</body>
+</html>
+

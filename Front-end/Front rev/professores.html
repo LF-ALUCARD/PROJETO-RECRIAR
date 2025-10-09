@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Professores - Sistema de Gestão Escolar</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="common.js" defer></script>
+</head>
+<body>
+    <!-- Container que será preenchido pelo JS -->
+    <div id="menu-container"></div>
+
+    <main>
+        <div class="container">
+            <h2>Gestão de Professores</h2>
+
+            <!-- Mensagem de feedback -->
+            <div id="feedback-message" class="feedback-message" style="display: none;"></div>
+
+            <!-- Barra de opções de CRUD -->
+            <div class="crud-bar">
+                <!-- Campo de busca -->
+                <input type="search" 
+                       id="buscar-professor" 
+                       placeholder="Buscar por nome, disciplina ou telefone..." 
+                       aria-label="Buscar professores">
+
+                <!-- Botões de ação -->
+                <button type="button" 
+                        id="btn-incluir" 
+                        class="btn-success" 
+                        onclick="incluirProfessor()">
+                    Novo Professor
+                </button>
+                <button type="button" 
+                        id="btn-alterar" 
+                        onclick="alterarProfessor()" 
+                        disabled>
+                    Editar
+                </button>
+                <button type="button" 
+                        id="btn-excluir" 
+                        class="btn-danger" 
+                        onclick="excluirProfessor()" 
+                        disabled>
+                    Excluir
+                </button>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <span class="stat-number" id="total-professores-count">0</span>
+                    <span class="stat-label">Total de Professores</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="professores-ativos-count">0</span>
+                    <span class="stat-label">Professores Ativos</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="professores-filtrados-count">0</span>
+                    <span class="stat-label">Resultados da Busca</span>
+                </div>
+            </div>
+
+            <!-- Tabela de professores -->
+            <div class="table-container">
+                <table class="table" id="tabela-professores">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" 
+                                       id="select-all" 
+                                       aria-label="Selecionar todos os professores">
+                            </th>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Disciplina</th>
+                            <th>Telefone</th>
+                            <th>E-mail</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-professores">
+                        <!-- BACKEND: Dados serão carregados via JavaScript a partir de uma API -->
+                    </tbody>
+                </table>
+                
+                <!-- Mensagem quando não há dados -->
+                <div id="no-data-message" class="no-data-message" style="display: none;">
+                    <p>Nenhum professor encontrado.</p>
+                    <button type="button" onclick="incluirProfessor()" class="btn-success">
+                        Cadastrar Primeiro Professor
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paginação -->
+            <div class="pagination" id="pagination-container" style="display: none;">
+                <button type="button" id="btn-prev" onclick="previousPage()" disabled>
+                    Anterior
+                </button>
+                <span id="page-info">Página 1 de 1</span>
+                <button type="button" id="btn-next" onclick="nextPage()" disabled>
+                    Próxima
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="common.js"></script>
+    <script src="menu.js"></script>
+    <script>
+        // ================================
+        // DADOS MOCK DOS PROFESSORES (BACKEND: Substituir por chamada à API)
+        // ================================
+        let professores = [
+            { 
+                id: "P001", 
+                nome: "Carlos Silva", 
+                disciplina: "Matemática", 
+                telefone: "(27) 99999-1111",
+                email: "carlos.silva@email.com",
+                status: "Ativo",
+                dataContratacao: "2023-08-01"
+            },
+            { 
+                id: "P002", 
+                nome: "Ana Souza", 
+                disciplina: "Português", 
+                telefone: "(27) 98888-2222",
+                email: "ana.souza@email.com",
+                status: "Ativo",
+                dataContratacao: "2023-08-15"
+            },
+            { 
+                id: "P003", 
+                nome: "João Pereira", 
+                disciplina: "História", 
+                telefone: "(27) 97777-3333",
+                email: "joao.pereira@email.com",
+                status: "Ativo",
+                dataContratacao: "2023-09-01"
+            },
+            { 
+                id: "P004", 
+                nome: "Maria Oliveira", 
+                disciplina: "Ciências", 
+                telefone: "(27) 96666-4444",
+                email: "maria.oliveira@email.com",
+                status: "Inativo",
+                dataContratacao: "2023-09-10"
+            },
+            { 
+                id: "P005", 
+                nome: "Pedro Santos", 
+                disciplina: "Física", 
+                telefone: "(27) 95555-5555",
+                email: "pedro.santos@email.com",
+                status: "Ativo",
+                dataContratacao: "2023-10-01"
+            }
+        ];
+
+        // Variáveis de controle
+        let professoresFiltrados = [...professores];
+        let currentPage = 1;
+        const itemsPerPage = CONFIG.ITEMS_PER_PAGE; // BACKEND: CONFIG.ITEMS_PER_PAGE pode ser um valor padrão ou vir do backend
+        let selectedProfessores = new Set();
+
+        // ================================
+        // INICIALIZAÇÃO
+        // ================================
+        document.addEventListener("DOMContentLoaded", function() {
+            // BACKEND: Verificar autenticação
+            if (!Auth.requireAuth()) return; // Auth.requireAuth() deve ser adaptado para o sistema de autenticação do backend
+
+            // Configurar eventos
+            setupEventListeners();
+            
+            // Carregar dados
+            // BACKEND: loadProfessores() deve chamar a API para buscar os professores
+            loadProfessores();
+            
+            // Atualizar estatísticas
+            // BACKEND: updateStats() pode precisar de dados do backend
+            updateStats();
+        });
+
+        // ================================
+        // CONFIGURAR EVENT LISTENERS
+        // ================================
+        function setupEventListeners() {
+            // Busca em tempo real
+            const searchInput = document.getElementById("buscar-professor");
+            searchInput.addEventListener("input", debounce(filtrarProfessores, 300));
+
+            // Selecionar todos
+            const selectAllCheckbox = document.getElementById("select-all");
+            selectAllCheckbox.addEventListener("change", toggleSelectAll);
+
+            // Teclas de atalho
+            document.addEventListener("keydown", handleKeyboardShortcuts);
+        }
+
+        // ================================
+        // CARREGAR PROFESSORES NA TABELA
+        // ================================
+        async function loadProfessores() { // BACKEND: Tornar assíncrona para chamadas de API
+            const tbody = document.getElementById("tbody-professores");
+            const noDataMessage = document.getElementById("no-data-message");
+            
+            // Limpar tabela
+            Table.clearBody("tabela-professores");
+
+            // BACKEND: Chamar API para buscar professores
+            // try {
+            //   const response = await fetch(`/api/professores?page=${currentPage}&limit=${itemsPerPage}&search=${document.getElementById("buscar-professor").value}`);
+            //   if (!response.ok) throw new Error("Erro ao carregar professores");
+            //   const data = await response.json(); // data.professores, data.totalProfessores, etc.
+            //   professores = data.professores; // Atualizar a lista de professores com os dados do backend
+            //   professoresFiltrados = data.professores; // Se a API já retorna filtrado/paginado
+            // } catch (error) {
+            //   console.error("Erro ao buscar professores:", error);
+            //   UI.showMessage("Não foi possível carregar os professores.", "error");
+            //   return;
+            // }
+            
+            if (professoresFiltrados.length === 0) {
+                document.querySelector(".table-container table").style.display = "none";
+                noDataMessage.style.display = "block";
+                document.getElementById("pagination-container").style.display = "none";
+                return;
+            }
+
+            document.querySelector(".table-container table").style.display = "table";
+            noDataMessage.style.display = "none";
+
+            // Calcular paginação (se a API não fizer isso, ou para dados mock)
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const professoresPage = professoresFiltrados.slice(startIndex, endIndex);
+
+            // Criar linhas
+            professoresPage.forEach(professor => {
+                const row = createProfessorRow(professor);
+                Table.addRow("tabela-professores", row);
+            });
+
+            // Atualizar paginação
+            updatePagination();
+            
+            // Atualizar botões
+            updateActionButtons();
+        }
+
+        // ================================
+        // CRIAR LINHA DA TABELA
+        // ================================
+        function createProfessorRow(professor) {
+            const row = document.createElement("tr");
+            row.dataset.professorId = professor.id;
+            
+            const isSelected = selectedProfessores.has(professor.id);
+            const statusClass = professor.status === "Ativo" ? "status-active" : "status-inactive";
+            
+            row.innerHTML = `
+                <td>
+                    <input type="checkbox" 
+                           class="professor-checkbox" 
+                           value="${professor.id}" 
+                           ${isSelected ? "checked" : ""}
+                           onchange="toggleProfessorSelection(\'${professor.id}\')">
+                </td>
+                <td>${professor.id}</td>
+                <td>${professor.nome}</td>
+                <td>${professor.disciplina}</td>
+                <td>${Format.phone(professor.telefone)}</td>
+                <td>${professor.email}</td>
+                <td><span class="status-badge ${statusClass}">${professor.status}</span></td>
+                <td class="actions">
+                    <button type="button" 
+                            class="btn-sm" 
+                            onclick="editarProfessor(\'${professor.id}\')" 
+                            title="Editar professor">
+                        ✏️
+                    </button>
+                    <button type="button" 
+                            class="btn-sm btn-danger" 
+                            onclick="confirmarExclusao(\'${professor.id}\')" 
+                            title="Excluir professor">
+                        🗑️
+                    </button>
+                </td>
+            `;
+            
+            return row;
+        }
+
+        // ================================
+        // FILTRAR PROFESSORES
+        // ================================
+        async function filtrarProfessores() { // BACKEND: Tornar assíncrona para chamadas de API
+            const searchTerm = document.getElementById("buscar-professor").value.toLowerCase();
+            
+            // BACKEND: Se a filtragem for feita no backend, chamar a API com o searchTerm
+            // try {
+            //   const response = await fetch(`/api/professores?search=${searchTerm}`);
+            //   if (!response.ok) throw new Error("Erro ao filtrar professores");
+            //   professoresFiltrados = await response.json();
+            // } catch (error) {
+            //   console.error("Erro ao filtrar professores:", error);
+            //   UI.showMessage("Não foi possível filtrar os professores.", "error");
+            //   return;
+            // }
+
+            if (!searchTerm) {
+                professoresFiltrados = [...professores]; // Usar a lista original se não houver termo de busca
+            } else {
+                professoresFiltrados = professores.filter(professor => 
+                    professor.nome.toLowerCase().includes(searchTerm) ||
+                    professor.disciplina.toLowerCase().includes(searchTerm) ||
+                    professor.telefone.toLowerCase().includes(searchTerm) ||
+                    professor.email.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            currentPage = 1;
+            selectedProfessores.clear();
+            loadProfessores();
+            updateStats();
+        }
+
+        // ================================
+        // SELEÇÃO DE PROFESSORES
+        // ================================
+        function toggleProfessorSelection(professorId) {
+            if (selectedProfessores.has(professorId)) {
+                selectedProfessores.delete(professorId);
+            } else {
+                selectedProfessores.add(professorId);
+            }
+            
+            updateActionButtons();
+            updateSelectAllCheckbox();
+        }
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById("select-all");
+            const checkboxes = document.querySelectorAll(".professor-checkbox");
+            
+            if (selectAllCheckbox.checked) {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                    selectedProfessores.add(checkbox.value);
+                });
+            } else {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                    selectedProfessores.delete(checkbox.value);
+                });
+            }
+            
+            updateActionButtons();
+        }
+
+        function updateSelectAllCheckbox() {
+            const selectAllCheckbox = document.getElementById("select-all");
+            const checkboxes = document.querySelectorAll(".professor-checkbox");
+            const checkedBoxes = document.querySelectorAll(".professor-checkbox:checked");
+            
+            if (checkedBoxes.length === 0) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = false;
+            } else if (checkedBoxes.length === checkboxes.length) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = true;
+            } else {
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+
+        // ================================
+        // ATUALIZAR BOTÕES DE AÇÃO
+        // ================================
+        function updateActionButtons() {
+            const hasSelection = selectedProfessores.size > 0;
+            const singleSelection = selectedProfessores.size === 1;
+            
+            document.getElementById("btn-alterar").disabled = !singleSelection;
+            document.getElementById("btn-excluir").disabled = !hasSelection;
+        }
+
+        // ================================
+        // FUNÇÕES DE CRUD
+        // ================================
+        function incluirProfessor() {
+            window.location.href = "novo-professor.html"; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        function alterarProfessor() {
+            if (selectedProfessores.size !== 1) {
+                UI.showMessage("Selecione exatamente um professor para editar.", "warning");
+                return;
+            }
+            
+            const professorId = Array.from(selectedProfessores)[0];
+            window.location.href = `alterar-professor.html?id=${professorId}`; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        function editarProfessor(professorId) {
+            window.location.href = `alterar-professor.html?id=${professorId}`; // BACKEND: Pode ser um redirecionamento para uma rota do backend
+        }
+
+        async function excluirProfessor() { // BACKEND: Tornar assíncrona para chamadas de API
+            if (selectedProfessores.size === 0) {
+                UI.showMessage("Selecione pelo menos um professor para excluir.", "warning");
+                return;
+            }
+            
+            const count = selectedProfessores.size;
+            const message = count === 1 
+                ? "Tem certeza que deseja excluir este professor?" 
+                : `Tem certeza que deseja excluir ${count} professores?`;
+            
+            if (confirm(message)) {
+                // BACKEND: Chamar API para exclusão de professores
+                // try {
+                //   const response = await fetch("/api/professores/batch-delete", {
+                //     method: "DELETE",
+                //     headers: { "Content-Type": "application/json" },
+                //     body: JSON.stringify({ ids: Array.from(selectedProfessores) })
+                //   });
+                //   if (!response.ok) throw new Error("Erro ao excluir professores");
+                //   // Lógica para remover do array local se necessário, ou recarregar
+                // } catch (error) {
+                //   console.error("Erro ao excluir professores:", error);
+                //   UI.showMessage("Não foi possível excluir os professores.", "error");
+                //   return;
+                // }
+
+                // Simular exclusão (integrar com backend)
+                selectedProfessores.forEach(professorId => {
+                    const index = professores.findIndex(p => p.id === professorId);
+                    if (index > -1) {
+                        professores.splice(index, 1);
+                    }
+                });
+                
+                selectedProfessores.clear();
+                filtrarProfessores(); // Recarregar dados após exclusão
+                UI.showMessage(`${count} professor(es) excluído(s) com sucesso.`, "success");
+            }
+        }
+
+        async function confirmarExclusao(professorId) { // BACKEND: Tornar assíncrona para chamadas de API
+            const professor = professores.find(p => p.id === professorId);
+            if (!professor) return;
+            
+            if (confirm(`Tem certeza que deseja excluir o professor \"${professor.nome}\"?`)) {
+                // BACKEND: Chamar API para exclusão de um único professor
+                // try {
+                //   const response = await fetch(`/api/professores/${professorId}`, {
+                //     method: "DELETE"
+                //   });
+                //   if (!response.ok) throw new Error("Erro ao excluir professor");
+                // } catch (error) {
+                //   console.error("Erro ao excluir professor:", error);
+                //   UI.showMessage("Não foi possível excluir o professor.", "error");
+                //   return;
+                // }
+
+                const index = professores.findIndex(p => p.id === professorId);
+                if (index > -1) {
+                    professores.splice(index, 1);
+                    filtrarProfessores(); // Recarregar dados após exclusão
+                    UI.showMessage("Professor excluído com sucesso.", "success");
+                }
+            }
+        }
+
+        // ================================
+        // PAGINAÇÃO
+        // ================================
+        function updatePagination() {
+            const totalPages = Math.ceil(professoresFiltrados.length / itemsPerPage);
+            const paginationContainer = document.getElementById("pagination-container");
+            
+            if (totalPages <= 1) {
+                paginationContainer.style.display = "none";
+                return;
+            }
+            
+            paginationContainer.style.display = "flex";
+            
+            document.getElementById("btn-prev").disabled = currentPage === 1;
+            document.getElementById("btn-next").disabled = currentPage === totalPages;
+            document.getElementById("page-info").textContent = `Página ${currentPage} de ${totalPages}`;
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(professoresFiltrados.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadProfessores();
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadProfessores();
+            }
+        }
+
+        // ================================
+        // ATUALIZAR ESTATÍSTICAS
+        // ================================
+        function updateStats() {
+            document.getElementById("total-professores-count").textContent = professores.length; // BACKEND: Total de professores do backend
+            document.getElementById("professores-ativos-count").textContent = professores.filter(p => p.status === "Ativo").length; // BACKEND: Contagem de ativos do backend
+            document.getElementById("professores-filtrados-count").textContent = professoresFiltrados.length;
+        }
+
+        // ================================
+        // UTILS (do common.js, se não estiver globalmente disponível)
+        // ================================
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+    </script>
+</body>
+</html>
+

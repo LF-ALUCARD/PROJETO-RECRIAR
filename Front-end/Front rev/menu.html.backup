@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Página Exemplo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Container vazio que será preenchido pelo JS -->
+  <div id="menu-container"></div>
+
+  <main>
+    <div class="container">
+      <h2>Conteúdo da Página</h2>
+      <p>Aqui vai o conteúdo específico de cada página.</p>
+    </div>
+  </main>
+
+  <script src="menu.js" defer></script>
+</body>
+</html>

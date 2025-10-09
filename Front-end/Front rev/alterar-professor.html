@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alterar Professor - Sistema Alunos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Menu via JS -->
+  <div id="menu-container"></div>
+
+  <main>
+    <div class="container">
+      <h2>Alterar Professor</h2>
+      <form id="form-alterar-professor">
+        <label for="nome">Nome</label>
+        <input type="text" id="nome" name="nome" required>
+
+        <label for="dataNascimento">Data de Nascimento</label>
+        <input type="date" id="dataNascimento" name="dataNascimento" required>
+
+        <label for="documento">Documento de Identidade</label>
+        <input type="text" id="documento" name="documento" required>
+
+        <label for="rua">Rua</label>
+        <input type="text" id="rua" name="rua" required>
+
+        <label for="numero">Número</label>
+        <input type="text" id="numero" name="numero" required>
+
+        <label for="bairro">Bairro</label>
+        <input type="text" id="bairro" name="bairro" required>
+
+        <label for="cidade">Cidade</label>
+        <input type="text" id="cidade" name="cidade" required>
+
+        <label for="telefone">Telefone</label>
+        <input type="tel" id="telefone" name="telefone" required>
+
+        <div class="form-actions">
+          <button type="submit">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script src="menu.js" defer></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // BACKEND: Carregar o menu e barra superior
+      // O menu.js já faz isso, mas se precisar de dados do backend para o menu, inserir aqui.
+
+      const params = new URLSearchParams(window.location.search);
+      const professorId = params.get("id");
+
+      if (professorId) {
+        carregarDadosProfessor(professorId);
+      } else {
+        console.error("ID do professor não fornecido na URL.");
+        alert("ID do professor não fornecido. Por favor, retorne à página de professores.");
+        // BACKEND: Opcional: redirecionar para a página de listagem de professores
+        // window.location.href = 'professores.html';
+      }
+
+      document.getElementById("form-alterar-professor").addEventListener("submit", function(e){
+        e.preventDefault();
+        salvarAlteracoesProfessor(professorId);
+      });
+    });
+
+    async function carregarDadosProfessor(id) {
+      // BACKEND: Substituir esta simulação pela chamada à API para buscar os dados do professor pelo ID
+      try {
+        // Exemplo de como seria a chamada real (assumindo uma API REST)
+        // const response = await fetch(`/api/professores/${id}`);
+        // if (!response.ok) throw new Error('Erro ao carregar professor');
+        // const professor = await response.json();
+
+        // Dados mock para demonstração
+        const professoresMock = [
+          {id:"101", nome:"Carlos Pereira", dataNascimento:"1980-05-10", documento:"12345678",
+           rua:"Rua A", numero:"10", bairro:"Centro", cidade:"Vitória", telefone:"(27) 99999-1111"},
+          {id:"102", nome:"Fernanda Souza", dataNascimento:"1985-08-15", documento:"87654321",
+           rua:"Rua B", numero:"20", bairro:"Jardim", cidade:"Vitória", telefone:"(27) 99999-2222"},
+          {id:"103", nome:"Ricardo Lima", dataNascimento:"1975-02-20", documento:"11223344",
+           rua:"Rua C", numero:"30", bairro:"Vila", cidade:"Vitória", telefone:"(27) 99999-3333"}
+        ];
+        const professor = professoresMock.find(p => p.id === id);
+
+        if(professor){
+          document.getElementById("nome").value = professor.nome;
+          document.getElementById("dataNascimento").value = professor.dataNascimento;
+          document.getElementById("documento").value = professor.documento;
+          document.getElementById("rua").value = professor.rua;
+          document.getElementById("numero").value = professor.numero;
+          document.getElementById("bairro").value = professor.bairro;
+          document.getElementById("cidade").value = professor.cidade;
+          document.getElementById("telefone").value = professor.telefone;
+        } else {
+          console.error("Professor não encontrado.");
+          alert("Professor não encontrado.");
+          // BACKEND: Opcional: redirecionar para a página de listagem de professores
+          // window.location.href = 'professores.html';
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados do professor:", error);
+        alert("Não foi possível carregar os dados do professor.");
+      }
+    }
+
+    async function salvarAlteracoesProfessor(id) {
+      const nome = document.getElementById("nome").value;
+      const dataNascimento = document.getElementById("dataNascimento").value;
+      const documento = document.getElementById("documento").value;
+      const rua = document.getElementById("rua").value;
+      const numero = document.getElementById("numero").value;
+      const bairro = document.getElementById("bairro").value;
+      const cidade = document.getElementById("cidade").value;
+      const telefone = document.getElementById("telefone").value;
+
+      const dadosProfessorAtualizados = {
+        id: id,
+        nome: nome,
+        dataNascimento: dataNascimento,
+        documento: documento,
+        rua: rua,
+        numero: numero,
+        bairro: bairro,
+        cidade: cidade,
+        telefone: telefone
+      };
+
+      // BACKEND: Enviar dadosProfessorAtualizados para a API de atualização do professor
+      try {
+        // Exemplo de como seria a chamada real (assumindo uma API REST PUT/PATCH)
+        // const response = await fetch(`/api/professores/${id}`, {
+        //   method: 'PUT',
+        //   headers: {
+        //     'Content-Type': 'application/json'
+        //   },
+        //   body: JSON.stringify(dadosProfessorAtualizados)
+        // });
+
+        // if (!response.ok) throw new Error('Erro ao salvar alterações do professor');
+
+        console.log('Dados do professor atualizados:', dadosProfessorAtualizados);
+        alert('Professor alterado com sucesso! (Simulado)');
+        // BACKEND: Opcional: redirecionar para a página de listagem de professores ou atualizar a página
+        // window.location.href = 'professores.html';
+
+      } catch (error) {
+        console.error('Erro ao salvar alterações do professor:', error);
+        alert('Não foi possível salvar as alterações do professor.');
+      }
+    }
+  </script>
+</body>
+</html>
+

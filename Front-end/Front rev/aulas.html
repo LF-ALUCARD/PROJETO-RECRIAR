@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Aulas - Sistema de Gestão Escolar</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="common.js" defer></script>
+</head>
+<body>
+    <!-- Container que será preenchido pelo JS -->
+    <div id="menu-container"></div>
+
+    <main>
+        <div class="container">
+            <h2>Gestão de Aulas</h2>
+
+            <!-- Mensagem de feedback -->
+            <div id="feedback-message" class="feedback-message" style="display: none;"></div>
+
+            <!-- Filtros -->
+            <div class="crud-bar">
+                <label for="dataAula">Data:</label>
+                <input type="date" id="dataAula" aria-label="Selecionar data das aulas">
+                
+                <input type="search" 
+                       id="buscar-aula" 
+                       placeholder="Filtrar por turma ou professor..." 
+                       aria-label="Buscar aulas">
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <span class="stat-number" id="total-aulas-count">0</span>
+                    <span class="stat-label">Total de Aulas</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="aulas-hoje-count">0</span>
+                    <span class="stat-label">Aulas Hoje</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="aulas-filtradas-count">0</span>
+                    <span class="stat-label">Resultados da Busca</span>
+                </div>
+            </div>
+
+            <!-- Tabela de aulas -->
+            <div class="table-container">
+                <table class="table" id="tabela-aulas">
+                    <thead>
+                        <tr>
+                            <th>Turma</th>
+                            <th>Professor</th>
+                            <th>Curso</th>
+                            <th>Dia</th>
+                            <th>Horário</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-aulas">
+                        <!-- BACKEND: Dados serão carregados via JavaScript a partir de uma API -->
+                    </tbody>
+                </table>
+                
+                <!-- Mensagem quando não há dados -->
+                <div id="no-data-message" class="no-data-message" style="display: none;">
+                    <p>Nenhuma aula encontrada para esta data.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="common.js"></script>
+    <script src="menu.js"></script>
+    <script>
+        // ================================
+        // DADOS MOCK DAS AULAS (BACKEND: Substituir por chamada à API)
+        // ================================
+        const aulas = [
+            {
+                turma: "Turma A - 1º Ano",
+                professor: "Carlos Silva",
+                curso: "Matemática",
+                dia: "2025-10-03",
+                horario: "08:00 - 10:00"
+            },
+            {
+                turma: "Turma B - 2º Ano",
+                professor: "Ana Souza",
+                curso: "Português",
+                dia: "2025-10-03",
+                horario: "10:00 - 12:00"
+            },
+            {
+                turma: "Turma C - 3º Ano",
+                professor: "João Pereira",
+                curso: "História",
+                dia: "2025-10-04",
+                horario: "08:00 - 10:00"
+            },
+            {
+                turma: "Turma A - 1º Ano",
+                professor: "Maria Oliveira",
+                curso: "Ciências",
+                dia: "2025-10-04",
+                horario: "10:00 - 12:00"
+            },
+            {
+                turma: "Turma D - 1º Ano",
+                professor: "Pedro Santos",
+                curso: "Física",
+                dia: "2025-10-05",
+                horario: "14:00 - 16:00"
+            }
+        ];
+
+        // Variáveis de controle
+        let aulasFiltradas = [...aulas];
+        let dataAtual = new Date().toISOString().slice(0, 10);
+
+        // ================================
+        // INICIALIZAÇÃO
+        // ================================
+        document.addEventListener("DOMContentLoaded", function() {
+            // BACKEND: Verificar autenticação
+            if (!Auth.requireAuth()) return; // Auth.requireAuth() deve ser adaptado para o sistema de autenticação do backend
+
+            // Configurar eventos
+            setupEventListeners();
+            
+            // Definir data atual
+            document.getElementById("dataAula").value = dataAtual;
+            
+            // Carregar dados
+            // BACKEND: carregarAulasPorData() deve chamar a API para buscar as aulas
+            carregarAulasPorData(dataAtual);
+            
+            // Atualizar estatísticas
+            // BACKEND: updateStats() pode precisar de dados do backend
+            updateStats();
+        });
+
+        // ================================
+        // CONFIGURAR EVENT LISTENERS
+        // ================================
+        function setupEventListeners() {
+            // Mudança de data
+            const dataInput = document.getElementById("dataAula");
+            dataInput.addEventListener("change", function() {
+                carregarAulasPorData(this.value);
+            });
+
+            // Busca em tempo real
+            const searchInput = document.getElementById("buscar-aula");
+            searchInput.addEventListener("input", debounce(filtrarAulas, 300));
+        }
+
+        // ================================
+        // CARREGAR AULAS POR DATA
+        // ================================
+        async function carregarAulasPorData(dataEscolhida) { // BACKEND: Tornar assíncrona para chamadas de API
+            const tbody = document.getElementById("tbody-aulas");
+            const noDataMessage = document.getElementById("no-data-message");
+            
+            // Limpar tabela
+            Table.clearBody("tabela-aulas");
+
+            // BACKEND: Chamar API para buscar aulas por data e/ou termo de busca
+            // try {
+            //   const searchTerm = document.getElementById("buscar-aula").value;
+            //   const response = await fetch(`/api/aulas?data=${dataEscolhida}&search=${searchTerm}`);
+            //   if (!response.ok) throw new Error("Erro ao carregar aulas");
+            //   const aulasDaAPI = await response.json();
+            //   aulasFiltradas = aulasDaAPI; // Atualizar a lista de aulas com os dados do backend
+            // } catch (error) {
+            //   console.error("Erro ao buscar aulas:", error);
+            //   UI.showMessage("Não foi possível carregar as aulas.", "error");
+            //   return;
+            // }
+
+            // Filtrar aulas por data (se a API não fizer isso, ou para dados mock)
+            const aulasDaData = aulas.filter(aula => aula.dia === dataEscolhida);
+            
+            // Aplicar filtro de busca se houver (se a API não fizer isso, ou para dados mock)
+            const searchTerm = document.getElementById("buscar-aula").value.toLowerCase();
+            if (searchTerm) {
+                aulasFiltradas = aulasDaData.filter(aula => 
+                    aula.turma.toLowerCase().includes(searchTerm) ||
+                    aula.professor.toLowerCase().includes(searchTerm) ||
+                    aula.curso.toLowerCase().includes(searchTerm)
+                );
+            } else {
+                aulasFiltradas = aulasDaData;
+            }
+            
+            if (aulasFiltradas.length === 0) {
+                document.querySelector(".table-container table").style.display = "none";
+                noDataMessage.style.display = "block";
+                return;
+            }
+
+            document.querySelector(".table-container table").style.display = "table";
+            noDataMessage.style.display = "none";
+
+            // Criar linhas
+            aulasFiltradas.forEach(aula => {
+                const row = createAulaRow(aula);
+                Table.addRow("tabela-aulas", row);
+            });
+            
+            // Atualizar estatísticas
+            updateStats();
+        }
+
+        // ================================
+        // CRIAR LINHA DA TABELA
+        // ================================
+        function createAulaRow(aula) {
+            const row = document.createElement("tr");
+            
+            row.innerHTML = `
+                <td>${aula.turma}</td>
+                <td>${aula.professor}</td>
+                <td>${aula.curso}</td>
+                <td>${Format.date(aula.dia)}</td>
+                <td>${aula.horario}</td>
+            `;
+            
+            return row;
+        }
+
+        // ================================
+        // FILTRAR AULAS
+        // ================================
+        function filtrarAulas() {
+            const dataEscolhida = document.getElementById("dataAula").value;
+            carregarAulasPorData(dataEscolhida);
+        }
+
+        // ================================
+        // ESTATÍSTICAS
+        // ================================
+        function updateStats() {
+            // BACKEND: Obter total de aulas e aulas de hoje do backend
+            const totalAulas = aulas.length; // Substituir por dados do backend
+            const aulasHoje = aulas.filter(a => a.dia === dataAtual).length; // Substituir por dados do backend
+            const resultadosFiltrados = aulasFiltradas.length;
+            
+            UI.animateCounter("total-aulas-count", totalAulas);
+            UI.animateCounter("aulas-hoje-count", aulasHoje);
+            UI.animateCounter("aulas-filtradas-count", resultadosFiltrados);
+        }
+
+        // ================================
+        // UTILITÁRIOS
+        // ================================
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+
+    <style>
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-summary .stat-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .table-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .no-data-message {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .crud-bar label {
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .crud-bar input[type="date"] {
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .table th:nth-child(3),
+            .table td:nth-child(3) {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>
+

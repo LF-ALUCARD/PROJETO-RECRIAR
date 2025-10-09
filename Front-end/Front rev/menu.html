@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - Sistema de Gestão Escolar</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="common.js" defer></script>
+  <script src="menu.js" defer></script>
+</head>
+<body>
+  <!-- Barra superior -->
+  <div class="top-bar">
+    <div class="empresa-logo">Instituto Recriar</div>
+    <div class="sair">
+      <a href="index.html">Sair</a>
+    </div>
+  </div>
+
+  <!-- Menu lateral -->
+  <div class="menu-lateral" id="menu-container">
+    <nav>
+      <ul>
+        <!-- BACKEND: Os itens do menu podem ser gerados dinamicamente com base nas permissões do usuário logado -->
+        <li><a href="menu.html" class="active">Dashboard</a></li>
+        <li><a href="alunos.html">Alunos</a></li>
+        <li><a href="professores.html">Professores</a></li>
+        <li><a href="turmas.html">Turmas</a></li>
+        <li><a href="aulas.html">Aulas</a></li>
+        <li><a href="admin.html">Administração</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <main>
+    <div class="container">
+      <h2>Dashboard - Bem-vindo ao Sistema</h2>
+      
+      <div id="user-info" class="mb-2">
+        <p>Olá, <strong id="username-display">Usuário</strong>! Você está logado desde <span id="login-time"></span>.</p>
+      </div>
+
+      <!-- Dashboard Cards e Estatísticas -->
+      <div class="dashboard-cards">
+        <!-- Seus cards aqui -->
+      </div>
+
+      <div class="quick-stats mt-2">
+        <!-- Seus stats aqui -->
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // BACKEND: A autenticação deve ser gerenciada pelo backend. Esta é uma simulação de front-end.
+      // Verifica se usuário está logado
+      if (!Auth.requireAuth()) return;
+
+      // Atualiza informações do usuário
+      const userInfo = Auth.getUserInfo(); // BACKEND: userInfo deve vir de uma API de autenticação do backend
+      document.getElementById("username-display").textContent = userInfo.username;
+      document.getElementById("login-time").textContent = Format.datetime(userInfo.loginTime);
+
+      // Carregar estatísticas simuladas
+      loadQuickStats();
+    });
+
+    async function loadQuickStats() {
+      // BACKEND: Substituir esta simulação pela chamada à API para buscar as estatísticas do dashboard
+      try {
+        // Exemplo de como seria a chamada real (assumindo uma API REST)
+        // const response = await fetch("/api/dashboard/stats");
+        // if (!response.ok) throw new Error("Erro ao carregar estatísticas");
+        // const stats = await response.json();
+
+        const stats = {
+          alunos: Math.floor(Math.random() * 500) + 100,
+          professores: Math.floor(Math.random() * 50) + 10,
+          turmas: Math.floor(Math.random() * 20) + 5,
+          aulas: Math.floor(Math.random() * 100) + 20
+        };
+
+        UI.animateCounter("total-alunos", stats.alunos);
+        UI.animateCounter("total-professores", stats.professores);
+        UI.animateCounter("total-turmas", stats.turmas);
+        UI.animateCounter("total-aulas", stats.aulas);
+      } catch (error) {
+        console.error("Erro ao carregar estatísticas do dashboard:", error);
+        // BACKEND: Tratar erro, talvez mostrar mensagem ao usuário
+      }
+    }
+  </script>
+</body>
+</html>
+

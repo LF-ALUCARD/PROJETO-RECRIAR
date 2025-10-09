@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios - Instituto Recriar</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="common.js" defer></script>
+</head>
+<body>
+  <!-- Menu lateral será preenchido pelo JS -->
+  <div id="menu-container"></div>
+
+  <main>
+    <div class="container">
+      <h2>Relatórios do Sistema</h2>
+      
+      <div id="feedback-message" class="feedback-message" style="display:none;"></div>
+      
+      <!-- Filtros gerais para relatórios -->
+      <div class="filtros-relatorio">
+        <h3>Filtros</h3>
+        <div class="filtros-grid">
+          <div class="form-group">
+            <label for="periodo-inicio">Data Início</label>
+            <input type="date" id="periodo-inicio" name="periodo-inicio">
+          </div>
+          <div class="form-group">
+            <label for="periodo-fim">Data Fim</label>
+            <input type="date" id="periodo-fim" name="periodo-fim">
+          </div>
+          <div class="form-group">
+            <label for="turma-filtro">Turma</label>
+            <select id="turma-filtro" name="turma-filtro">
+              <option value="">Todas as turmas</option>
+              <!-- BACKEND: Carregar turmas dinamicamente -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="professor-filtro">Professor</label>
+            <select id="professor-filtro" name="professor-filtro">
+              <option value="">Todos os professores</option>
+              <!-- BACKEND: Carregar professores dinamicamente -->
+            </select>
+          </div>
+        </div>
+        <div class="filtros-acoes">
+          <button type="button" id="limpar-filtros" class="btn-secundario">Limpar Filtros</button>
+          <button type="button" id="aplicar-filtros">Aplicar Filtros</button>
+        </div>
+      </div>
+
+      <!-- Grid de relatórios disponíveis -->
+      <div class="relatorios-grid">
+        
+        <!-- Relatório de Alunos -->
+        <div class="relatorio-card">
+          <h3>📊 Relatório de Alunos</h3>
+          <p>Lista completa de alunos matriculados com informações pessoais, responsáveis e dados de contato.</p>
+          <button class="btn-relatorio" data-relatorio="alunos">Gerar Relatório</button>
+        </div>
+
+        <!-- Relatório de Professores -->
+        <div class="relatorio-card">
+          <h3>👨‍🏫 Relatório de Professores</h3>
+          <p>Informações dos professores cadastrados, suas especialidades e turmas atribuídas.</p>
+          <button class="btn-relatorio" data-relatorio="professores">Gerar Relatório</button>
+        </div>
+
+        <!-- Relatório de Turmas -->
+        <div class="relatorio-card">
+          <h3>📚 Relatório de Turmas</h3>
+          <p>Detalhes das turmas ativas, quantidade de alunos por turma e professores responsáveis.</p>
+          <button class="btn-relatorio" data-relatorio="turmas">Gerar Relatório</button>
+        </div>
+
+        <!-- Relatório de Frequência -->
+        <div class="relatorio-card">
+          <h3>📅 Relatório de Frequência</h3>
+          <p>Controle de presença dos alunos por período, turma ou disciplina específica.</p>
+          <button class="btn-relatorio" data-relatorio="frequencia">Gerar Relatório</button>
+        </div>
+
+        <!-- Relatório de Matrículas -->
+        <div class="relatorio-card">
+          <h3>📝 Relatório de Matrículas</h3>
+          <p>Histórico de matrículas realizadas por período, incluindo novas matrículas e transferências.</p>
+          <button class="btn-relatorio" data-relatorio="matriculas">Gerar Relatório</button>
+        </div>
+
+        <!-- Relatório Estatístico -->
+        <div class="relatorio-card">
+          <h3>📈 Relatório Estatístico</h3>
+          <p>Estatísticas gerais do sistema: total de alunos, professores, turmas e indicadores de desempenho.</p>
+          <button class="btn-relatorio" data-relatorio="estatisticas">Gerar Relatório</button>
+        </div>
+
+        <!-- Relatório de Contatos -->
+        <div class="relatorio-card">
+          <h3>📞 Relatório de Contatos</h3>
+          <p>Lista de contatos de responsáveis e alunos para comunicação e emergências.</p>
+          <button class="btn-relatorio" data-relatorio="contatos">Gerar Relatório</button>
+        </div>
+
+        <!-- Relatório de Aniversariantes -->
+        <div class="relatorio-card">
+          <h3>🎂 Aniversariantes do Mês</h3>
+          <p>Lista de alunos e funcionários que fazem aniversário no mês selecionado.</p>
+          <button class="btn-relatorio" data-relatorio="aniversariantes">Gerar Relatório</button>
+        </div>
+
+        <!-- Relatório Personalizado -->
+        <div class="relatorio-card">
+          <h3>⚙️ Relatório Personalizado</h3>
+          <p>Configure campos específicos e filtros avançados para criar relatórios customizados.</p>
+          <button class="btn-relatorio" data-relatorio="personalizado">Configurar</button>
+        </div>
+
+      </div>
+
+      <!-- Área de preview do relatório -->
+      <div id="relatorio-preview" style="display: none;">
+        <h3>Preview do Relatório</h3>
+        <div id="relatorio-conteudo"></div>
+        <div class="form-actions">
+          <button type="button" id="exportar-pdf">📄 Exportar PDF</button>
+          <button type="button" id="exportar-excel">📊 Exportar Excel</button>
+          <button type="button" id="imprimir-relatorio">🖨️ Imprimir</button>
+          <button type="button" id="fechar-preview" class="btn-secundario">Fechar</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="menu.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // BACKEND: Carregar dados iniciais para os filtros
+      carregarFiltrosIniciais();
+      
+      // Configurar eventos dos botões de relatório
+      configurarEventosRelatorios();
+      
+      // Configurar filtros
+      configurarFiltros();
+    });
+
+    /**
+     * Carrega dados iniciais para os filtros (turmas e professores)
+     * BACKEND: Substituir por chamadas reais à API
+     */
+    async function carregarFiltrosIniciais() {
+      try {
+        // BACKEND: Carregar turmas
+        // const turmasResponse = await fetch('/api/turmas');
+        // const turmas = await turmasResponse.json();
+        
+        // Simulação de dados de turmas
+        const turmas = [
+          { id: 1, nome: 'Turma A - Manhã' },
+          { id: 2, nome: 'Turma B - Tarde' },
+          { id: 3, nome: 'Turma C - Noite' }
+        ];
+        
+        const turmaSelect = document.getElementById('turma-filtro');
+        turmas.forEach(turma => {
+          const option = document.createElement('option');
+          option.value = turma.id;
+          option.textContent = turma.nome;
+          turmaSelect.appendChild(option);
+        });
+
+        // BACKEND: Carregar professores
+        // const professoresResponse = await fetch('/api/professores');
+        // const professores = await professoresResponse.json();
+        
+        // Simulação de dados de professores
+        const professores = [
+          { id: 1, nome: 'Prof. João Silva' },
+          { id: 2, nome: 'Prof. Maria Santos' },
+          { id: 3, nome: 'Prof. Carlos Oliveira' }
+        ];
+        
+        const professorSelect = document.getElementById('professor-filtro');
+        professores.forEach(professor => {
+          const option = document.createElement('option');
+          option.value = professor.id;
+          option.textContent = professor.nome;
+          professorSelect.appendChild(option);
+        });
+
+      } catch (error) {
+        console.error('Erro ao carregar filtros:', error);
+        UI.showMessage('Erro ao carregar filtros. Alguns filtros podem não estar disponíveis.', 'warning');
+      }
+    }
+
+    /**
+     * Configura eventos dos botões de relatório
+     */
+    function configurarEventosRelatorios() {
+      const botoesRelatorio = document.querySelectorAll('.btn-relatorio');
+      
+      botoesRelatorio.forEach(botao => {
+        botao.addEventListener('click', function() {
+          const tipoRelatorio = this.getAttribute('data-relatorio');
+          gerarRelatorio(tipoRelatorio);
+        });
+      });
+
+      // Eventos dos botões de ação do preview
+      document.getElementById('exportar-pdf')?.addEventListener('click', () => exportarRelatorio('pdf'));
+      document.getElementById('exportar-excel')?.addEventListener('click', () => exportarRelatorio('excel'));
+      document.getElementById('imprimir-relatorio')?.addEventListener('click', imprimirRelatorio);
+      document.getElementById('fechar-preview')?.addEventListener('click', fecharPreview);
+    }
+
+    /**
+     * Configura eventos dos filtros
+     */
+    function configurarFiltros() {
+      document.getElementById('limpar-filtros')?.addEventListener('click', limparFiltros);
+      document.getElementById('aplicar-filtros')?.addEventListener('click', aplicarFiltros);
+    }
+
+    /**
+     * Gera um relatório baseado no tipo especificado
+     * @param {string} tipo - Tipo do relatório a ser gerado
+     */
+    async function gerarRelatorio(tipo) {
+      try {
+        UI.showMessage('Gerando relatório...', 'info');
+        
+        // Coletar filtros aplicados
+        const filtros = coletarFiltros();
+        
+        // BACKEND: Substituir por chamada real à API
+        // const response = await fetch(`/api/relatorios/${tipo}`, {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //     'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+        //   },
+        //   body: JSON.stringify(filtros)
+        // });
+
+        // if (!response.ok) {
+        //   throw new Error('Erro ao gerar relatório');
+        // }
+
+        // const dadosRelatorio = await response.json();
+
+        // Simulação de dados do relatório
+        const dadosRelatorio = gerarDadosSimulados(tipo, filtros);
+        
+        // Exibir preview do relatório
+        exibirPreviewRelatorio(tipo, dadosRelatorio);
+        
+        UI.showMessage('Relatório gerado com sucesso!', 'success');
+        
+      } catch (error) {
+        console.error('Erro ao gerar relatório:', error);
+        UI.showMessage(error.message || 'Erro ao gerar relatório. Tente novamente.', 'error');
+      }
+    }
+
+    /**
+     * Coleta os filtros aplicados pelo usuário
+     * @returns {Object} Objeto com os filtros aplicados
+     */
+    function coletarFiltros() {
+      return {
+        dataInicio: document.getElementById('periodo-inicio')?.value || null,
+        dataFim: document.getElementById('periodo-fim')?.value || null,
+        turmaId: document.getElementById('turma-filtro')?.value || null,
+        professorId: document.getElementById('professor-filtro')?.value || null
+      };
+    }
+
+    /**
+     * Gera dados simulados para o relatório
+     * BACKEND: Esta função será removida quando integrada com a API real
+     */
+    function gerarDadosSimulados(tipo, filtros) {
+      const dados = {
+        tipo: tipo,
+        filtros: filtros,
+        dataGeracao: new Date().toLocaleString('pt-BR'),
+        dados: []
+      };
+
+      switch (tipo) {
+        case 'alunos':
+          dados.titulo = 'Relatório de Alunos';
+          dados.dados = [
+            { nome: 'João Silva', turma: 'Turma A', responsavel: 'Maria Silva', telefone: '(11) 99999-9999' },
+            { nome: 'Ana Santos', turma: 'Turma B', responsavel: 'José Santos', telefone: '(11) 88888-8888' }
+          ];
+          break;
+        case 'professores':
+          dados.titulo = 'Relatório de Professores';
+          dados.dados = [
+            { nome: 'Prof. João Silva', especialidade: 'Matemática', turmas: 'A, B' },
+            { nome: 'Prof. Maria Santos', especialidade: 'Português', turmas: 'C, D' }
+          ];
+          break;
+        case 'turmas':
+          dados.titulo = 'Relatório de Turmas';
+          dados.dados = [
+            { nome: 'Turma A - Manhã', alunos: 25, professor: 'Prof. João Silva' },
+            { nome: 'Turma B - Tarde', alunos: 30, professor: 'Prof. Maria Santos' }
+          ];
+          break;
+        default:
+          dados.titulo = `Relatório de ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`;
+          dados.dados = [{ info: 'Dados simulados para ' + tipo }];
+      }
+
+      return dados;
+    }
+
+    /**
+     * Exibe o preview do relatório gerado
+     */
+    function exibirPreviewRelatorio(tipo, dados) {
+      const preview = document.getElementById('relatorio-preview');
+      const conteudo = document.getElementById('relatorio-conteudo');
+      
+      let html = `
+        <div class="relatorio-header">
+          <h4>${dados.titulo}</h4>
+          <p><strong>Data de Geração:</strong> ${dados.dataGeracao}</p>
+        </div>
+        <div class="relatorio-body">
+      `;
+
+      if (dados.dados.length > 0) {
+        html += '<table class="table">';
+        
+        // Cabeçalho da tabela
+        const primeiroItem = dados.dados[0];
+        html += '<thead><tr>';
+        Object.keys(primeiroItem).forEach(key => {
+          html += `<th>${key.charAt(0).toUpperCase() + key.slice(1)}</th>`;
+        });
+        html += '</tr></thead>';
+        
+        // Dados da tabela
+        html += '<tbody>';
+        dados.dados.forEach(item => {
+          html += '<tr>';
+          Object.values(item).forEach(value => {
+            html += `<td>${value}</td>`;
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+      } else {
+        html += '<p>Nenhum dado encontrado para os filtros aplicados.</p>';
+      }
+
+      html += '</div>';
+      
+      conteudo.innerHTML = html;
+      preview.style.display = 'block';
+      preview.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    /**
+     * Exporta o relatório no formato especificado
+     */
+    function exportarRelatorio(formato) {
+      // BACKEND: Implementar exportação real
+      UI.showMessage(`Exportando relatório em formato ${formato.toUpperCase()}...`, 'info');
+      
+      // Simulação de download
+      setTimeout(() => {
+        UI.showMessage(`Relatório exportado com sucesso em ${formato.toUpperCase()}!`, 'success');
+      }, 2000);
+    }
+
+    /**
+     * Imprime o relatório atual
+     */
+    function imprimirRelatorio() {
+      const conteudo = document.getElementById('relatorio-conteudo').innerHTML;
+      const janela = window.open('', '_blank');
+      
+      janela.document.write(`
+        <html>
+          <head>
+            <title>Relatório - Instituto Recriar</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              th { background-color: #f2f2f2; }
+              .relatorio-header { margin-bottom: 20px; }
+            </style>
+          </head>
+          <body>
+            ${conteudo}
+          </body>
+        </html>
+      `);
+      
+      janela.document.close();
+      janela.print();
+    }
+
+    /**
+     * Fecha o preview do relatório
+     */
+    function fecharPreview() {
+      document.getElementById('relatorio-preview').style.display = 'none';
+    }
+
+    /**
+     * Limpa todos os filtros aplicados
+     */
+    function limparFiltros() {
+      document.getElementById('periodo-inicio').value = '';
+      document.getElementById('periodo-fim').value = '';
+      document.getElementById('turma-filtro').value = '';
+      document.getElementById('professor-filtro').value = '';
+      
+      UI.showMessage('Filtros limpos.', 'info');
+    }
+
+    /**
+     * Aplica os filtros selecionados
+     */
+    function aplicarFiltros() {
+      const filtros = coletarFiltros();
+      const filtrosAtivos = Object.values(filtros).filter(f => f !== null && f !== '').length;
+      
+      if (filtrosAtivos > 0) {
+        UI.showMessage(`${filtrosAtivos} filtro(s) aplicado(s). Gere um relatório para ver os resultados.`, 'success');
+      } else {
+        UI.showMessage('Nenhum filtro selecionado.', 'warning');
+      }
+    }
+
+  </script>
+</body>
+</html>
